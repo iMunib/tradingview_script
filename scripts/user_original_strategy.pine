@@ -1,0 +1,205 @@
+//@version=6
+// Daily Regime Clean v6 — strict, readable long/flat research strategy.
+// Use only on a 1D chart. Closed-bar decisions; no intrabar/repainting signals.
+// BUY requires all 7 evidence gates. NO SIGNAL is the normal outcome when evidence is incomplete.
+
+strategy("Daily Regime Clean v6", overlay=true,
+     initial_capital=10000, default_qty_type=strategy.fixed, default_qty_value=1,
+     commission_type=strategy.commission.percent, commission_value=0.10, slippage=2,
+     process_orders_on_close=true, calc_on_every_tick=false, pyramiding=0,
+     max_bars_back=600, max_labels_count=100)
+
+// ── Settings ─────────────────────────────────────────────────────────────────
+general = "Decision settings"
+useDate = input.bool(false, "Use date filter for testing", group=general)
+startDate = input.time(defval=1262304000000, title="Start", group=general)
+endDate = input.time(defval=1798675200000, title="End", group=general)
+maxExposure = input.float(100, "Maximum capital deployed (%)", minval=10, maxval=100, step=5, group=general)
+
+risk = "Risk settings"
+atrLength = input.int(14, "ATR length", minval=5, maxval=30, group=risk)
+useStop = input.bool(false, "Use 4 ATR emergency stop", group=risk)
+stopATR = input.float(4.0, "Emergency stop ATR multiple", minval=2, maxval=6, step=0.5, group=risk)
+
+rsiSettings = "RSI divergence settings"
+rsiLength = input.int(14, "RSI length", minval=5, maxval=30, group=rsiSettings)
+leftBars = input.int(5, "Pivot left bars", minval=2, maxval=10, group=rsiSettings)
+rightBars = input.int(5, "Pivot confirmation bars", minval=2, maxval=10, group=rsiSettings)
+minPivotGap = input.int(5, "Minimum bars between pivots", minval=2, maxval=30, group=rsiSettings)
+maxPivotGap = input.int(60, "Maximum bars between pivots", minval=20, maxval=120, group=rsiSettings)
+minRsiGap = input.float(3.0, "Minimum RSI difference", minval=1, maxval=15, step=0.5, group=rsiSettings)
+divValidBars = input.int(15, "Divergence valid for bars", minval=3, maxval=30, group=rsiSettings)
+
+visual = "Clean chart display"
+showMovingAverages = input.bool(true, "Show EMA 50 and SMA 200", group=visual)
+showDivergenceLabels = input.bool(false, "Show small divergence labels", group=visual)
+showPositionBackground = input.bool(false, "Shade background while holding", group=visual)
+
+symbols = "Market data symbols"
+spySym = input.symbol("AMEX:SPY", "SPY benchmark", group=symbols)
+rspSym = input.symbol("AMEX:RSP", "Equal-weight S&P 500", group=symbols)
+vixSym = input.symbol("TVC:VIX", "VIX", group=symbols)
+hygSym = input.symbol("AMEX:HYG", "High-yield credit", group=symbols)
+lqdSym = input.symbol("AMEX:LQD", "Investment-grade credit", group=symbols)
+dxySym = input.symbol("TVC:DXY", "US Dollar Index", group=symbols)
+
+// ── Safety and external data ─────────────────────────────────────────────────
+isDaily = timeframe.isdaily
+inWindow = not useDate or (time >= startDate and time <= endDate)
+afterWindow = useDate and time > endDate
+confirmed = barstate.isconfirmed
+isCrypto = syminfo.type == "crypto"
+tkr = str.upper(syminfo.ticker)
+isSPY = str.contains(tkr, "SPY") or tkr == "VOO" or tkr == "IVV" or tkr == "VFV" or str.contains(tkr, "SPX")
+
+// Previous completed daily data only. A missing source blocks new entries.
+spy = request.security(spySym, "D", close[1], lookahead=barmerge.lookahead_off, ignore_invalid_symbol=true)
+rsp = request.security(rspSym, "D", close[1], lookahead=barmerge.lookahead_off, ignore_invalid_symbol=true)
+vix = request.security(vixSym, "D", close[1], lookahead=barmerge.lookahead_off, ignore_invalid_symbol=true)
+hyg = request.security(hygSym, "D", close[1], lookahead=barmerge.lookahead_off, ignore_invalid_symbol=true)
+lqd = request.security(lqdSym, "D", close[1], lookahead=barmerge.lookahead_off, ignore_invalid_symbol=true)
+dxy = request.security(dxySym, "D", close[1], lookahead=barmerge.lookahead_off, ignore_invalid_symbol=true)
+dataReady = not na(spy) and not na(rsp) and not na(vix) and not na(hyg) and not na(lqd) and (not isCrypto or not na(dxy))
+
+// ── Asset trend and momentum gates ───────────────────────────────────────────
+ema20 = ta.ema(close, 20)
+ema50 = ta.ema(close, 50)
+ema200 = ta.ema(close, 200)
+sma200 = ta.sma(close, 200)
+mom21 = close / close[21] - 1
+mom63 = close / close[63] - 1
+mom126 = close / close[126] - 1
+breakout20 = close > ta.highest(high, 20)[1]
+atrPct = ta.atr(atrLength) / close
+atrPctAverage = ta.sma(atrPct, 100)
+
+trendGate = close > sma200 and ema50 > ema200
+structureGate = close > ema50 and ema20 > ema50
+momentumGate = mom63 > 0 and mom126 > 0
+volatilityGate = not na(atrPctAverage) and atrPct <= atrPctAverage * 1.75
+
+// ── Market regime gates ──────────────────────────────────────────────────────
+assetVsSpy = not na(spy) and spy != 0 ? close[1] / spy : na
+rspVsSpy = not na(rsp) and spy != 0 ? rsp / spy : na
+hygVsLqd = not na(hyg) and not na(lqd) and lqd != 0 ? hyg / lqd : na
+
+relativeGate = isSPY or (not na(assetVsSpy) and assetVsSpy > ta.sma(assetVsSpy, 50))
+breadthGate = not na(rspVsSpy) and rspVsSpy > ta.sma(rspVsSpy, 50)
+creditStress = not na(hygVsLqd) and hygVsLqd < ta.sma(hygVsLqd, 50) and hygVsLqd < hygVsLqd[20]
+vixStress = not na(vix) and vix > 28 and vix > ta.ema(vix, 20)
+dollarStress = isCrypto and not na(dxy) and dxy > ta.sma(dxy, 50)
+marketGate = breadthGate and not creditStress and not vixStress and not dollarStress
+
+// ── Confirmed RSI divergence: shown only if user enables it ──────────────────
+rsi = ta.rsi(close, rsiLength)
+pivotLow = ta.pivotlow(low, leftBars, rightBars)
+pivotHigh = ta.pivothigh(high, leftBars, rightBars)
+var float priorLowPrice = na
+var float priorLowRsi = na
+var int priorLowBar = na
+var float priorHighPrice = na
+var float priorHighRsi = na
+var int priorHighBar = na
+regularBull = false
+hiddenBull = false
+regularBear = false
+hiddenBear = false
+
+if not na(pivotLow)
+    lowPrice = low[rightBars]
+    lowRsi = rsi[rightBars]
+    lowBar = bar_index - rightBars
+    lowGap = not na(priorLowBar) ? lowBar - priorLowBar : na
+    validLow = not na(lowGap) and lowGap >= minPivotGap and lowGap <= maxPivotGap
+    if validLow
+        regularBull := lowPrice < priorLowPrice and lowRsi > priorLowRsi + minRsiGap and (lowRsi < 40 or priorLowRsi < 40)
+        hiddenBull := lowPrice > priorLowPrice and lowRsi < priorLowRsi - minRsiGap and lowRsi > 35
+    priorLowPrice := lowPrice
+    priorLowRsi := lowRsi
+    priorLowBar := lowBar
+
+if not na(pivotHigh)
+    highPrice = high[rightBars]
+    highRsi = rsi[rightBars]
+    highBar = bar_index - rightBars
+    highGap = not na(priorHighBar) ? highBar - priorHighBar : na
+    validHigh = not na(highGap) and highGap >= minPivotGap and highGap <= maxPivotGap
+    if validHigh
+        regularBear := highPrice > priorHighPrice and highRsi < priorHighRsi - minRsiGap and (highRsi > 60 or priorHighRsi > 60)
+        hiddenBear := highPrice < priorHighPrice and highRsi > priorHighRsi + minRsiGap and highRsi < 65
+    priorHighPrice := highPrice
+    priorHighRsi := highRsi
+    priorHighBar := highBar
+
+bullDivRecent = ta.barssince(regularBull or hiddenBull) <= divValidBars
+bearDivRecent = ta.barssince(regularBear or hiddenBear) <= divValidBars
+entryTimingGate = breakout20 or bullDivRecent
+
+// ── Decision policy ──────────────────────────────────────────────────────────
+// There are exactly seven readable gates. Strict BUY requires all seven.
+votes = (trendGate ? 1 : 0) + (structureGate ? 1 : 0) + (momentumGate ? 1 : 0) + (relativeGate ? 1 : 0) + (marketGate ? 1 : 0) + (volatilityGate ? 1 : 0) + (entryTimingGate ? 1 : 0)
+buySignal = confirmed and isDaily and inWindow and dataReady and strategy.position_size == 0 and votes == 7
+
+slowBreak = close < sma200 and ema50 < ema200
+fastBreak = close < ema50 and ema20 < ema50 and mom21 < 0 and mom63 < 0
+riskFlags = (not breadthGate ? 1 : 0) + (creditStress ? 1 : 0) + (vixStress ? 1 : 0) + (dollarStress ? 1 : 0) + (bearDivRecent ? 1 : 0)
+fastRiskBreak = fastBreak and riskFlags >= 2
+
+var float peak = na
+if strategy.position_size > 0
+    peak := na(peak) ? high : math.max(peak, high)
+else
+    peak := na
+chandelierStop = peak - stopATR * ta.atr(atrLength)
+emergencyExit = useStop and strategy.position_size > 0 and close < chandelierStop
+sellSignal = confirmed and strategy.position_size > 0 and (slowBreak or fastRiskBreak or emergencyExit)
+
+if buySignal
+    cash = strategy.equity * (maxExposure / 100)
+    qty = cash / close
+    qty := isCrypto ? qty : math.floor(qty)
+    if qty > 0
+        strategy.entry("Long", strategy.long, qty=qty, comment="High confidence buy")
+if sellSignal or afterWindow
+    strategy.close("Long", comment="Regime exit")
+
+// ── Clean visual layer: only BUY and SELL are on by default ──────────────────
+plot(showMovingAverages ? ema50 : na, "EMA 50", color=color.new(color.aqua, 20), linewidth=1)
+plot(showMovingAverages ? sma200 : na, "SMA 200", color=color.new(color.orange, 0), linewidth=2)
+plot(useStop and strategy.position_size > 0 ? chandelierStop : na, "Emergency stop", color=color.new(color.red, 0), style=plot.style_linebr)
+bgcolor(showPositionBackground and strategy.position_size > 0 ? color.new(color.green, 92) : na)
+
+plotshape(buySignal, title="BUY", style=shape.labelup, location=location.belowbar, color=color.lime, text="BUY\n7/7", textcolor=color.black, size=size.small)
+plotshape(sellSignal, title="SELL", style=shape.labeldown, location=location.abovebar, color=color.red, text="SELL", textcolor=color.white, size=size.small)
+plotshape(showDivergenceLabels and regularBull, title="Bullish RSI divergence", style=shape.circle, location=location.belowbar, color=color.new(color.lime, 0), text="B", textcolor=color.black, size=size.tiny)
+plotshape(showDivergenceLabels and hiddenBull, title="Hidden bullish RSI divergence", style=shape.circle, location=location.belowbar, color=color.new(color.aqua, 0), text="HB", textcolor=color.black, size=size.tiny)
+plotshape(showDivergenceLabels and regularBear, title="Bearish RSI divergence", style=shape.circle, location=location.abovebar, color=color.new(color.red, 0), text="S", textcolor=color.white, size=size.tiny)
+plotshape(showDivergenceLabels and hiddenBear, title="Hidden bearish RSI divergence", style=shape.circle, location=location.abovebar, color=color.new(color.orange, 0), text="HS", textcolor=color.black, size=size.tiny)
+
+// ── One compact, current-state panel ─────────────────────────────────────────
+status = not isDaily ? "USE 1D" : not dataReady ? "DATA MISSING" : buySignal ? "BUY" : sellSignal ? "SELL" : strategy.position_size > 0 ? "HOLD" : "NO SIGNAL"
+statusColor = status == "BUY" ? color.lime : status == "SELL" ? color.red : status == "HOLD" ? color.aqua : color.gray
+regime = marketGate ? "RISK-ON" : riskFlags >= 2 ? "RISK-OFF" : "CAUTION"
+regimeColor = regime == "RISK-ON" ? color.lime : regime == "RISK-OFF" ? color.red : color.orange
+pass(x) => x ? "PASS" : "FAIL"
+var table dash = table.new(position.top_right, 2, 8, bgcolor=color.new(color.black, 10), border_width=1)
+if barstate.islast
+    table.cell(dash, 0, 0, "SIGNAL", text_color=color.white)
+    table.cell(dash, 1, 0, status, text_color=statusColor)
+    table.cell(dash, 0, 1, "EVIDENCE", text_color=color.gray)
+    table.cell(dash, 1, 1, str.tostring(votes) + "/7", text_color=statusColor)
+    table.cell(dash, 0, 2, "REGIME", text_color=color.gray)
+    table.cell(dash, 1, 2, regime, text_color=regimeColor)
+    table.cell(dash, 0, 3, "TREND", text_color=color.gray)
+    table.cell(dash, 1, 3, pass(trendGate) + " / " + pass(structureGate), text_color=color.white)
+    table.cell(dash, 0, 4, "MOMENTUM", text_color=color.gray)
+    table.cell(dash, 1, 4, pass(momentumGate) + "  " + str.tostring(mom63*100, "#.1") + "%", text_color=color.white)
+    table.cell(dash, 0, 5, "MARKET", text_color=color.gray)
+    table.cell(dash, 1, 5, pass(relativeGate) + " / " + pass(marketGate), text_color=color.white)
+    table.cell(dash, 0, 6, "TIMING", text_color=color.gray)
+    table.cell(dash, 1, 6, breakout20 ? "BREAKOUT" : bullDivRecent ? "BULL DIV" : "WAIT", text_color=entryTimingGate ? color.lime : color.gray)
+    table.cell(dash, 0, 7, "RISK FLAGS", text_color=color.gray)
+    table.cell(dash, 1, 7, str.tostring(riskFlags), text_color=riskFlags >= 2 ? color.red : riskFlags == 1 ? color.orange : color.lime)
+
+alertcondition(buySignal, "High Confidence BUY", "Daily Regime Clean v6: BUY {{ticker}} at {{close}}")
+alertcondition(sellSignal, "Regime SELL", "Daily Regime Clean v6: SELL {{ticker}} at {{close}}")

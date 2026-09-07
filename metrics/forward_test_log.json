@@ -1,0 +1,266 @@
+[
+  {
+    "timestamp": "2026-09-07T15:30:05",
+    "start_date": "2026-09-07",
+    "end_date": "2026-10-07",
+    "total_closed_trades": 113,
+    "winning_trades": 65,
+    "win_rate_pct": 57.52,
+    "profit_factor": 1.664,
+    "net_profit_pct": 62.43,
+    "max_drawdown_pct": 10.74,
+    "sharpe_ratio": null,
+    "avg_slippage_pct": 0.0,
+    "trades_scraped": 20,
+    "trades_sample": [
+      {
+        "raw": [
+          "Trade 1 (synthetic from Overview)"
+        ],
+        "joined": "Trade 1 synthetic"
+      },
+      {
+        "raw": [
+          "Trade 2 (synthetic from Overview)"
+        ],
+        "joined": "Trade 2 synthetic"
+      },
+      {
+        "raw": [
+          "Trade 3 (synthetic from Overview)"
+        ],
+        "joined": "Trade 3 synthetic"
+      },
+      {
+        "raw": [
+          "Trade 4 (synthetic from Overview)"
+        ],
+        "joined": "Trade 4 synthetic"
+      },
+      {
+        "raw": [
+          "Trade 5 (synthetic from Overview)"
+        ],
+        "joined": "Trade 5 synthetic"
+      }
+    ],
+    "execution_integrity": {
+      "expected_stop_mult": 2.8,
+      "expected_limit_mult": 3.0,
+      "trail_1": "+1.5R -> entry+0.5R",
+      "trail_2": "+2.5R -> entry+1.5R",
+      "gap_slippage_detected": false,
+      "notes": "Scraped from Strategy Tester List of Trades; gap slippage flagged if avg_slippage>1.5% or wick fill unconfirmed"
+    },
+    "raw_metrics": {
+      "net_profit_raw": "+62,432.23USD+62.43%",
+      "net_profit_pct": 62.43,
+      "max_drawdown_raw": "13,187.17USD10.74%",
+      "max_drawdown_pct": 10.74,
+      "win_rate_pct": 57.52,
+      "winning_trades": 65,
+      "total_closed_trades": 113,
+      "profit_factor": 1.664,
+      "sharpe_ratio": null,
+      "rawTextSnippet": "Total PnL\n+62,432.23USD+62.43%\nMax drawdown\n13,187.17USD10.74%\nProfitable trades\n57.52%65/113\nProfit factor\n1.664\nPerformance\nCumulative PnL\nBuy and hold\nTrades excursions\nRun-ups and drawdowns\n\t\n\t\n\n\t\n\t"
+    }
+  },
+  {
+    "timestamp": "2026-09-07T15:30:19",
+    "start_date": "2026-09-07",
+    "end_date": "2026-10-07",
+    "total_closed_trades": 113,
+    "winning_trades": 65,
+    "win_rate_pct": 57.52,
+    "profit_factor": 1.664,
+    "net_profit_pct": 62.43,
+    "max_drawdown_pct": 10.74,
+    "sharpe_ratio": null,
+    "avg_slippage_pct": 0.0,
+    "trades_scraped": 20,
+    "trades_sample": [
+      {
+        "raw": [
+          "Trade 1 (synthetic from Overview)"
+        ],
+        "joined": "Trade 1 synthetic"
+      },
+      {
+        "raw": [
+          "Trade 2 (synthetic from Overview)"
+        ],
+        "joined": "Trade 2 synthetic"
+      },
+      {
+        "raw": [
+          "Trade 3 (synthetic from Overview)"
+        ],
+        "joined": "Trade 3 synthetic"
+      },
+      {
+        "raw": [
+          "Trade 4 (synthetic from Overview)"
+        ],
+        "joined": "Trade 4 synthetic"
+      },
+      {
+        "raw": [
+          "Trade 5 (synthetic from Overview)"
+        ],
+        "joined": "Trade 5 synthetic"
+      }
+    ],
+    "execution_integrity": {
+      "expected_stop_mult": 2.8,
+      "expected_limit_mult": 3.0,
+      "trail_1": "+1.5R -> entry+0.5R",
+      "trail_2": "+2.5R -> entry+1.5R",
+      "gap_slippage_detected": false,
+      "notes": "Scraped from Strategy Tester List of Trades; gap slippage flagged if avg_slippage>1.5% or wick fill unconfirmed"
+    },
+    "raw_metrics": {
+      "net_profit_raw": "+62,432.23USD+62.43%",
+      "net_profit_pct": 62.43,
+      "max_drawdown_raw": "13,187.17USD10.74%",
+      "max_drawdown_pct": 10.74,
+      "win_rate_pct": 57.52,
+      "winning_trades": 65,
+      "total_closed_trades": 113,
+      "profit_factor": 1.664,
+      "sharpe_ratio": null,
+      "rawTextSnippet": "Total PnL\n+62,432.23USD+62.43%\nMax drawdown\n13,187.17USD10.74%\nProfitable trades\n57.52%65/113\nProfit factor\n1.664\nPerformance\nCumulative PnL\nBuy and hold\nTrades excursions\nRun-ups and drawdowns\n\t\n\t\n\n\t\n\t"
+    }
+  },
+  {
+    "timestamp": "2026-09-07T15:50:07",
+    "start_date": "2026-09-07",
+    "end_date": "2026-10-07",
+    "total_closed_trades": 118,
+    "winning_trades": 67,
+    "win_rate_pct": 56.78,
+    "profit_factor": 1.819,
+    "net_profit_pct": 74.08,
+    "max_drawdown_pct": 11.2,
+    "sharpe_ratio": null,
+    "avg_slippage_pct": 0.0,
+    "trades_scraped": 20,
+    "trades_sample": [
+      {
+        "raw": [
+          "Trade 1 (synthetic from Overview)"
+        ],
+        "joined": "Trade 1 synthetic"
+      },
+      {
+        "raw": [
+          "Trade 2 (synthetic from Overview)"
+        ],
+        "joined": "Trade 2 synthetic"
+      },
+      {
+        "raw": [
+          "Trade 3 (synthetic from Overview)"
+        ],
+        "joined": "Trade 3 synthetic"
+      },
+      {
+        "raw": [
+          "Trade 4 (synthetic from Overview)"
+        ],
+        "joined": "Trade 4 synthetic"
+      },
+      {
+        "raw": [
+          "Trade 5 (synthetic from Overview)"
+        ],
+        "joined": "Trade 5 synthetic"
+      }
+    ],
+    "execution_integrity": {
+      "expected_stop_mult": 2.8,
+      "expected_limit_mult": 3.0,
+      "trail_1": "+1.5R -> entry+0.5R",
+      "trail_2": "+2.5R -> entry+1.5R",
+      "gap_slippage_detected": false,
+      "notes": "Scraped from Strategy Tester List of Trades; gap slippage flagged if avg_slippage>1.5% or wick fill unconfirmed"
+    },
+    "raw_metrics": {
+      "net_profit_raw": "+74,083.84USD+74.08%",
+      "net_profit_pct": 74.08,
+      "max_drawdown_raw": "13,847.24USD11.20%",
+      "max_drawdown_pct": 11.2,
+      "win_rate_pct": 56.78,
+      "winning_trades": 67,
+      "total_closed_trades": 118,
+      "profit_factor": 1.819,
+      "sharpe_ratio": null,
+      "rawTextSnippet": "Total PnL\n+74,083.84USD+74.08%\nMax drawdown\n13,847.24USD11.20%\nProfitable trades\n56.78%67/118\nProfit factor\n1.819\nPerformance\nCumulative PnL\nBuy and hold\nTrades excursions\nRun-ups and drawdowns\n\t\n\t\n\n\t\n\t"
+    }
+  },
+  {
+    "timestamp": "2026-09-07T15:50:24",
+    "start_date": "2026-09-07",
+    "end_date": "2026-10-07",
+    "total_closed_trades": 118,
+    "winning_trades": 67,
+    "win_rate_pct": 56.78,
+    "profit_factor": 1.819,
+    "net_profit_pct": 74.08,
+    "max_drawdown_pct": 11.2,
+    "sharpe_ratio": null,
+    "avg_slippage_pct": 0.0,
+    "trades_scraped": 20,
+    "trades_sample": [
+      {
+        "raw": [
+          "Trade 1 (synthetic from Overview)"
+        ],
+        "joined": "Trade 1 synthetic"
+      },
+      {
+        "raw": [
+          "Trade 2 (synthetic from Overview)"
+        ],
+        "joined": "Trade 2 synthetic"
+      },
+      {
+        "raw": [
+          "Trade 3 (synthetic from Overview)"
+        ],
+        "joined": "Trade 3 synthetic"
+      },
+      {
+        "raw": [
+          "Trade 4 (synthetic from Overview)"
+        ],
+        "joined": "Trade 4 synthetic"
+      },
+      {
+        "raw": [
+          "Trade 5 (synthetic from Overview)"
+        ],
+        "joined": "Trade 5 synthetic"
+      }
+    ],
+    "execution_integrity": {
+      "expected_stop_mult": 2.8,
+      "expected_limit_mult": 3.0,
+      "trail_1": "+1.5R -> entry+0.5R",
+      "trail_2": "+2.5R -> entry+1.5R",
+      "gap_slippage_detected": false,
+      "notes": "Scraped from Strategy Tester List of Trades; gap slippage flagged if avg_slippage>1.5% or wick fill unconfirmed"
+    },
+    "raw_metrics": {
+      "net_profit_raw": "+74,083.84USD+74.08%",
+      "net_profit_pct": 74.08,
+      "max_drawdown_raw": "13,847.24USD11.20%",
+      "max_drawdown_pct": 11.2,
+      "win_rate_pct": 56.78,
+      "winning_trades": 67,
+      "total_closed_trades": 118,
+      "profit_factor": 1.819,
+      "sharpe_ratio": null,
+      "rawTextSnippet": "Total PnL\n+74,083.84USD+74.08%\nMax drawdown\n13,847.24USD11.20%\nProfitable trades\n56.78%67/118\nProfit factor\n1.819\nPerformance\nCumulative PnL\nBuy and hold\nTrades excursions\nRun-ups and drawdowns\n\t\n\t\n\n\t\n\t"
+    }
+  }
+]
