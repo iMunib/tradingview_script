@@ -114,13 +114,6 @@ shortTrendBullish = close > ema50 and ema20 > ema50
 breakout20 = close > ta.highest(high, 20)[1]
 
 longSetup = macroGate and volumeConfirmed and (bullDivActive or breakout20) and shortTrendBullish and inTradeWindow
-// ─── Hypothesis A — Trend-Continuation Pullback Trigger (ADDITIVE ONLY) ─────────
-// Reuses EXISTING wEma200 (weeklyEma200) and rsi (rsi14) — no duplicate series
-// No new request.security calls — lookahead=barmerge.lookahead_off untouched
-// Spec verbatim: (close > weeklyEma200) and (low <= ema20 and close >= ema20) and (rsi14 45-55) and (volume > volSMA20)
-continuationTrigger = (close > wEma200) and (low <= ema20 and close >= ema20) and (rsi >= 45 and rsi <= 55) and (volume > volSMA20)
-// Gated merge — respects inTradeWindow for IS/OOS walk-forward (otherwise OR bypasses date filter)
-longSetup := longSetup or (continuationTrigger and inTradeWindow)
 longEntry = longSetup and not longSetup[1]
 
 // ─── 5. RISK & POSITION SIZING (Whole Shares vs Fractional Crypto) ───────────
@@ -201,8 +194,6 @@ plot(showExecutionLines and strategy.position_size > 0 ? targetPrice : na, "Targ
 
 // BUY — clean green triangle below candle (only on confirmed longEntry)
 plotshape(longEntry, title="BUY", style=shape.triangleup, location=location.belowbar, color=color.new(color.green, 0), size=size.small, text="BUY", textcolor=color.white)
-// Hypothesis A — trigger attribution (internal visibility, no exit duplication)
-plotchar(continuationTrigger, title="Continuation Pullback", char="•", location=location.belowbar, color=color.new(color.blue, 0), size=size.tiny)
 
 // EXIT — clean red triangle above candle (bear divergence, stop, TP, or position closed)
 exitPlot = (regularBear and barstate.isconfirmed and strategy.position_size > 0) or (strategy.position_size[1] > 0 and strategy.position_size == 0)
