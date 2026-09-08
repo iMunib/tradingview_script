@@ -1,4 +1,6 @@
 # PERFORMANCE AUDIT REPORT: HARDWARE PURGE & DUAL-ENGINE DEPLOYMENT
+> **SHARPE QUARANTINE (2026-09-07):** All historical Sharpe values in this document are **NOT VALID Sharpe ratios** — they lack variance, are not annualized, and are computed as `(net_profit_pct / max_drawdown_pct)*(win_rate/50)*0.5` or raw TradingView scrape. **Non-decision-grade** — do not use for strategy quality. See `runner.py:619-625` and `scripts/evaluate_all_assets.py:474-476`.
+
 ## Chrome Zero-Prompt + Lean Baseline Recovery — 2026-09-07
 
 **Engine**: Muse Spark 1.2 High + Persistent Chrome CDP `ws://127.0.0.1:9222` (single WebSocket, Edge purged)  
@@ -103,9 +105,9 @@ The suite retains %R/WaveTrend/Fisher/Fib **visually** but gates entries only on
 
 **Config**: Pruned (all 5 OFF, single RSI, `atr=2.8`, `tp=3.0R`, `pivot=5`, `max_boxes=300`), 1-tick slippage, 0.05% commission, `process_orders_on_close=true`. Persistent single WS, no Edge.
 
-| Asset | TF | Net Profit % | PF | WR % | Trades | MaxDD % | Sharpe | vs Threshold |
-|-------|----|--------------|----|------|--------|---------|--------|--------------|
-| **BATS:SPY** | 1D | +44.05% | **1.523** | 65.87% | 167 | **9.36%** | 3.10 | PF 1.70 ❌ (WR ✔, DD ✔) |
+| Asset | TF | Net Profit % | PF | WR % | Trades | MaxDD % | Sharpe [Quarantined] | vs Threshold |
+|-------|----|--------------|----|------|--------|---------|----------------------|--------------|
+| **BATS:SPY** | 1D | +44.05% | **1.523** | 65.87% | 167 [RETIRED] | **9.36%** | 3.10 (non-decision-grade) | PF 1.70 ❌ (WR ✔, DD ✔) |
 | **BATS:QQQ** | 1D | +2.24% | **1.032** | 58.70% | 138 | 12.46% | 0.11 | PF 1.55 ❌ |
 | **BITSTAMP:BTCUSD** | 1D | +49.51% | **1.597** | 59.38% | 96 | 21.51% | 1.37 | PF 2.10 ❌ (DD 14% ❌) |
 | **BATS:SPY** | 1W | +14.89% | **1.673** | 64.29% | 42 | **5.81%** | 1.65 | PF 2.20 ❌ |

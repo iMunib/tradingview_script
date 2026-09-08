@@ -121,8 +121,12 @@ class CDPClient:
         if self.ws:
             await self.ws.close()
 
-async def run_pipeline(pine_file='strategy.pine', symbol=None, interval=None, wait_sec=6):
+async def run_pipeline(pine_file='FINAL_OPTIMIZED_STRATEGY.pine', symbol=None, interval=None, wait_sec=6):
     pine_path = os.path.join(ROOT_DIR, pine_file)
+    if not os.path.exists(pine_path) and pine_file == 'strategy.pine':
+        fallback = os.path.join(ROOT_DIR, 'FINAL_OPTIMIZED_STRATEGY.pine')
+        if os.path.exists(fallback):
+            pine_path = fallback
     if not os.path.exists(pine_path):
         raise FileNotFoundError(f'Pine script not found: {pine_path}')
     with open(pine_path, 'r', encoding='utf-8') as f:
@@ -621,6 +625,7 @@ async def run_pipeline(pine_file='strategy.pine', symbol=None, interval=None, wa
                 dd = max(metrics['max_drawdown_pct'], 1.0)
                 np = metrics['net_profit_pct'] or 0.0
                 wr = metrics['win_rate_pct'] or 50.0
+                # NOT A VALID SHARPE RATIO — no variance/annualization, non-decision-grade.
                 sharpe_est = round((np / dd) * (wr / 50.0) * 0.5, 2)
                 metrics['sharpe_ratio'] = sharpe_est
 
@@ -641,7 +646,7 @@ async def run_pipeline(pine_file='strategy.pine', symbol=None, interval=None, wa
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='TradingView Pine Script Runner')
-    parser.add_argument('--pine', default='strategy.pine', help='Path to Pine Script file')
+    parser.add_argument('--pine', default='FINAL_OPTIMIZED_STRATEGY.pine', help='Path to Pine Script file')
     parser.add_argument('--symbol', default=None, help='Target Ticker')
     parser.add_argument('--interval', default=None, help='Target Resolution')
     parser.add_argument('--wait', type=int, default=6, help='Wait seconds after compile')

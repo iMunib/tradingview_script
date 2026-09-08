@@ -38,13 +38,9 @@ inSampleStart  = timestamp(2018, 1, 1, 0, 0)
 inSampleEnd    = timestamp(2024, 12, 31, 23, 59)
 outSampleStart = timestamp(2025, 1, 1, 0, 0)
 outSampleEnd   = timestamp(2026, 12, 31, 23, 59)
-bool inTradeWindow = true
-if useDateFilter
-    if dateMode == "In-Sample (2018-2024)"
-        inTradeWindow := time >= inSampleStart and time <= inSampleEnd
-    else if dateMode == "Out-of-Sample (2025-2026)"
-        inTradeWindow := time >= outSampleStart and time <= outSampleEnd
-
+// GENERATE-IS-START
+bool inTradeWindow = (time >= outSampleStart and time <= outSampleEnd)
+// GENERATE-IS-END
 // ─── 1. MACRO REGIME (Zero Lookahead) ───────────────────────────────────────
 wEma200 = request.security(syminfo.tickerid, "W", ta.ema(close, 200)[1], lookahead=barmerge.lookahead_off)
 dEma200 = ta.ema(close, 200)

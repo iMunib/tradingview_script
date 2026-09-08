@@ -1,4 +1,6 @@
 # Autonomous Quantitative Swing System — Single-Script Master for TradingView Free
+> **SHARPE QUARANTINE (2026-09-07):** All historical Sharpe values in this document are **NOT VALID Sharpe ratios** — they lack variance, are not annualized, and are computed as `(net_profit_pct / max_drawdown_pct)*(win_rate/50)*0.5` or raw TradingView scrape. **Non-decision-grade** — do not use for strategy quality. See `runner.py:619-625` and `scripts/evaluate_all_assets.py:474-476`.
+
 
 **Target:** `BATS:SPY` · `BATS:QQQ` · `BITSTAMP:BTCUSD` · **TF:** 1D / 1W · **Engine:** OpenCode CLI (Muse Spark 1.2 High) + Chrome DevTools Protocol (CDP) `ws://127.0.0.1:9222` · **Pine:** `//@version=5` · **Master:** [`FINAL_OPTIMIZED_STRATEGY.pine`](FINAL_OPTIMIZED_STRATEGY.pine) `strategy("FINAL OPTIMIZED — Single RSI 14, 5-Bar Pivots, W200, 2.8R/3.0R", shorttitle="FINAL_BASELINE")` · **Slots:** 1 of 2 (Free-tier compliant)
 
@@ -106,7 +108,7 @@ No oscillator lines, no Gaussian, no clouds, no MFI histogram — all math stays
 
 ### Why Stacking Failed — Collinear Lag
 
-Sweep on `BATS:SPY 1D` over `atrStopMult=[2.4,2.8,3.2]`, `tp=[2.5,3.0,3.5]`, `pivotLR=[3,5,8]` converged on `2.8/3.0/5` → **PF 1.819, Net +74.08%, DD 11.20%, WR 56.78%, Sharpe ~3.76** (118 trades). Adding confluence:
+Sweep on `BATS:SPY 1D` over `atrStopMult=[2.4,2.8,3.2]`, `tp=[2.5,3.0,3.5]`, `pivotLR=[3,5,8]` converged on `2.8/3.0/5` → **PF 1.819, Net +74.08%, DD 11.20%, WR 56.78%, Sharpe ~3.76 (QUARANTINED — non-decision-grade)** (118 trades [RETIRED historical figure]). Adding confluence:
 
 | Toggle | SPY PF | QQQ PF | DD | Verdict |
 |--------|--------|--------|----|---------|
@@ -115,8 +117,8 @@ Sweep on `BATS:SPY 1D` over `atrStopMult=[2.4,2.8,3.2]`, `tp=[2.5,3.0,3.5]`, `pi
 | +Volume BuyVol>0.50 | 1.288 | 1.03 | 10.73% | deadweight |
 | Gaussian+Volume | 1.623 (187) | 0.993 | 10.34% | QQQ collapses |
 | gaussUseFilter 1σ×10 | 0.946 (46) | — | 12.11% | sticky collapse |
-| **Pruned single RSI (divMin=1)** | **1.523 (167)** | **1.032** | 9.36% | partial restore |
-| **`FINAL` lean (single RSI 14, W200, 2.8/3.0 bracket) — this master** | **1.819 (118)** | **1.592 (QQQ, 89 tr, 11.51% DD baseline)** | 11.20% | **wins** |
+| **Pruned single RSI (divMin=1)** | **1.523 (167 [RETIRED])** | **1.032** | 9.36% | partial restore |
+| **`FINAL` lean (single RSI 14, W200, 2.8/3.0 bracket) — this master** | **1.819 (118 [RETIRED])** | **1.592 (QQQ, 89 tr, 11.51% DD baseline)** | 11.20% | **wins** |
 
 **Root cause — collinear lag:** RSI(14), MACD hist(12,26,9), OBV(20), MFI(14), VW-MACD(12,26), Fisher(10), WaveTrend(10,21,4), %R(21/112), Gaussian(25) are **same 10–30 bar EMA family** on price/volume. Requiring `bullVotes>=3` loosens strict `curRsi>prior+2.0 && rsi<45` to easier `cur>prior && <0` per oscillator — more permissive, more trades 135→170, lower PF. Entries fire **when swing is exhausted** — classic lag. Gaussian `srcFiltered:= abs(src-nz(src[1]))<1.0*stdev(src,10)? nz(srcFiltered[1]):src` is sticky and kills to 46 trades.
 
@@ -154,10 +156,10 @@ if currentGainR>=1.5 and not stage1Locked
 
 ### 4.1 Full Period (2018-2026) — This Master (`FINAL_BASELINE`, BATS:SPY 1D live 2026-09-07)
 
-| Asset | TF | Net % | PF | WR % | Trades | DD % | Sharpe | Threshold |
-|-------|----|-------|----|------|--------|------|--------|-----------|
-| **BATS:SPY 1D (this deploy, 2026-09-07, clean)** | 1D | **+74.08%** | **1.819** | 56.78% | 118 | **11.20%** | 3.76 | PF 1.70 ✔ WR ✔ DD 12% ✔ |
-| BATS:SPY 1D (pruned suite, 1.523, 167 tr, 9.36% DD) | 1D | +44.05% | 1.523 | 65.87% | 167 | 9.36% | 3.10 | PF 1.70 ✘ |
+| Asset | TF | Net % | PF | WR % | Trades | DD % | Sharpe [Quarantined] | Threshold |
+|-------|----|-------|----|------|--------|------|----------------------|-----------|
+| **BATS:SPY 1D (historical unverified, 2026-09-07)** | 1D | **+74.08%** | **1.819** | 56.78% | 118 [RETIRED] | **11.20%** | 3.76 (non-decision-grade) | PF 1.70 ✔ WR ✔ DD 12% ✔ |
+| BATS:SPY 1D (pruned suite, 1.523, 167 tr, 9.36% DD) | 1D | +44.05% | 1.523 | 65.87% | 167 [RETIRED] | 9.36% | 3.10 (non-decision-grade) | PF 1.70 ✘ |
 | BATS:QQQ 1D (baseline lean) | 1D | — | **1.592** | — | 89 | 11.51% | — | PF 1.55 ✔ |
 | BITSTAMP:BTCUSD 1D (baseline) | 1D | — | 2.066 | — | 80 | 26.09% | — | PF 2.10 ✘ DD ✘ |
 | BATS:SPY 1W | 1W | — | 3.344 | — | 28 | — | — | PF 2.20 ✔ |

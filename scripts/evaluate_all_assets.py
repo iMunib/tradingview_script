@@ -180,12 +180,23 @@ def generate_partitioned_files():
         base_code = f.read()
     is_code = re.sub(r'useDateFilter\s*=\s*input\.bool\(false[^\n]*\)', 'useDateFilter       = true', base_code)
     is_code = re.sub(r'dateMode\s*=\s*input\.string\("All"[^\n]*\)', 'dateMode            = "In-Sample (2018-2024)"', is_code)
-    is_code = re.sub(r'bool inTradeWindow = true[\s\S]*?(?=// ═══════════════════════════════════════════════════════════════════════════════\n// SECTION 2:)', 'bool inTradeWindow = (time >= inSampleStart and time <= inSampleEnd)\n', is_code)
+    # Fix: use explicit markers if present, else fallback to actual header (was broken: used ═ and SECTION 2)
+    if '// GENERATE-IS-START' in base_code and '// GENERATE-IS-END' in base_code:
+        is_code = re.sub(r'// GENERATE-IS-START[\s\S]*?// GENERATE-IS-END',
+                         '// GENERATE-IS-START\nbool inTradeWindow = (time >= inSampleStart and time <= inSampleEnd)\n// GENERATE-IS-END',
+                         is_code)
+    else:
+        is_code = re.sub(r'bool inTradeWindow = true[\s\S]*?(?=// ─── 1\. MACRO REGIME)', 'bool inTradeWindow = (time >= inSampleStart and time <= inSampleEnd)\n', is_code)
     with open(IS_PINE, "w", encoding="utf-8") as f:
         f.write(is_code)
     oos_code = re.sub(r'useDateFilter\s*=\s*input\.bool\(false[^\n]*\)', 'useDateFilter       = true', base_code)
     oos_code = re.sub(r'dateMode\s*=\s*input\.string\("All"[^\n]*\)', 'dateMode            = "Out-of-Sample (2025-2026)"', oos_code)
-    oos_code = re.sub(r'bool inTradeWindow = true[\s\S]*?(?=// ═══════════════════════════════════════════════════════════════════════════════\n// SECTION 2:)', 'bool inTradeWindow = (time >= outSampleStart and time <= outSampleEnd)\n', oos_code)
+    if '// GENERATE-IS-START' in base_code and '// GENERATE-IS-END' in base_code:
+        oos_code = re.sub(r'// GENERATE-IS-START[\s\S]*?// GENERATE-IS-END',
+                          '// GENERATE-IS-START\nbool inTradeWindow = (time >= outSampleStart and time <= outSampleEnd)\n// GENERATE-IS-END',
+                          oos_code)
+    else:
+        oos_code = re.sub(r'bool inTradeWindow = true[\s\S]*?(?=// ─── 1\. MACRO REGIME)', 'bool inTradeWindow = (time >= outSampleStart and time <= outSampleEnd)\n', oos_code)
     with open(OOS_PINE, "w", encoding="utf-8") as f:
         f.write(oos_code)
 
@@ -473,6 +484,7 @@ async def persistent_pipeline(client, pine_file, symbol, interval, wait_sec=6):
         else:
             if metrics['profit_factor'] and metrics['total_closed_trades'] and metrics['max_drawdown_pct']:
                 pf=metrics['profit_factor']; dd=max(metrics['max_drawdown_pct'],1.0); np=metrics['net_profit_pct'] or 0.0; wr=metrics['win_rate_pct'] or 50.0
+                # NOT A VALID SHARPE RATIO — no variance/annualization, non-decision-grade.
                 metrics['sharpe_ratio']=round((np/dd)*(wr/50.0)*0.5,2)
     print(json.dumps(metrics, indent=2))
     return metrics
