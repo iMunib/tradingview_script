@@ -2,7 +2,7 @@
 param(
     [int]$Port = 9222,
     [string]$Url = "https://www.tradingview.com/chart/",
-    [string]$UserDataDir = "C:\Users\RehmanPC\AppData\Local\Google\Chrome\User Data"
+    [string]$UserDataDir = "C:\Users\RehmanPC\ChromeDevProfile"
 )
 $ErrorActionPreference = "Stop"
 $ChromeCandidates = @(

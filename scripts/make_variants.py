@@ -8,29 +8,36 @@ with open(final_path, 'r', encoding='utf-8') as f:
     code = f.read()
 
 # 1. In-Sample Variant (2018-2024)
-code_is = code.replace(
-    'strategy("FINAL OPTIMIZED QUANT MULTI-FACTOR SWING STRATEGY",',
-    'strategy("FINAL QUANT STRATEGY - IN SAMPLE", shorttitle="QUANT_IS",'
-)
-# Remove the input declarations for date window to avoid re-declaration
-code_is = re.sub(r'group_dates\s*=\s*"Walk-Forward Validation Window"[\s\S]*?(?=group_ui\s*=\s*"Visual Interface & HUD")', '', code_is)
-code_is = re.sub(
-    r'bool inTradeWindow = true[\s\S]*?(?=// ═══════════════════════════════════════════════════════════════════════════════\r?\n// 3\. ZERO-LOOKAHEAD)',
-    'bool inTradeWindow = (time >= inSampleStart and time <= inSampleEnd)\nbool useDateFilter = true\n\n',
-    code_is
-)
+code_is = re.sub(r'useDateFilter\s*=\s*input\.bool\(false[^\n]*\)', 'useDateFilter       = true', code)
+code_is = re.sub(r'dateMode\s*=\s*input\.string\("All"[^\n]*\)', 'dateMode            = "In-Sample (2018-2024)"', code_is)
+if '// GENERATE-IS-START' in code and '// GENERATE-IS-END' in code:
+    code_is = re.sub(
+        r'// GENERATE-IS-START[\s\S]*?// GENERATE-IS-END',
+        '// GENERATE-IS-START\nbool inTradeWindow = (time >= inSampleStart and time <= inSampleEnd)\n// GENERATE-IS-END',
+        code_is
+    )
+else:
+    code_is = re.sub(
+        r'bool inTradeWindow = true[\s\S]*?(?=// ─── 1\. MACRO REGIME)',
+        'bool inTradeWindow = (time >= inSampleStart and time <= inSampleEnd)\n',
+        code_is
+    )
 
 # 2. Out-of-Sample Variant (2025-2026)
-code_oos = code.replace(
-    'strategy("FINAL OPTIMIZED QUANT MULTI-FACTOR SWING STRATEGY",',
-    'strategy("FINAL QUANT STRATEGY - OUT OF SAMPLE", shorttitle="QUANT_OOS",'
-)
-code_oos = re.sub(r'group_dates\s*=\s*"Walk-Forward Validation Window"[\s\S]*?(?=group_ui\s*=\s*"Visual Interface & HUD")', '', code_oos)
-code_oos = re.sub(
-    r'bool inTradeWindow = true[\s\S]*?(?=// ═══════════════════════════════════════════════════════════════════════════════\r?\n// 3\. ZERO-LOOKAHEAD)',
-    'bool inTradeWindow = (time >= outSampleStart and time <= outSampleEnd)\nbool useDateFilter = true\n\n',
-    code_oos
-)
+code_oos = re.sub(r'useDateFilter\s*=\s*input\.bool\(false[^\n]*\)', 'useDateFilter       = true', code)
+code_oos = re.sub(r'dateMode\s*=\s*input\.string\("All"[^\n]*\)', 'dateMode            = "Out-of-Sample (2025-2026)"', code_oos)
+if '// GENERATE-IS-START' in code and '// GENERATE-IS-END' in code:
+    code_oos = re.sub(
+        r'// GENERATE-IS-START[\s\S]*?// GENERATE-IS-END',
+        '// GENERATE-IS-START\nbool inTradeWindow = (time >= outSampleStart and time <= outSampleEnd)\n// GENERATE-IS-END',
+        code_oos
+    )
+else:
+    code_oos = re.sub(
+        r'bool inTradeWindow = true[\s\S]*?(?=// ─── 1\. MACRO REGIME)',
+        'bool inTradeWindow = (time >= outSampleStart and time <= outSampleEnd)\n',
+        code_oos
+    )
 
 with open(os.path.join(ROOT, 'strategy_is.pine'), 'w', encoding='utf-8') as f:
     f.write(code_is)

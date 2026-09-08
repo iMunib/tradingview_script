@@ -79,11 +79,11 @@ Systematic toggling of 5 components on SPY/QQQ 1D (all other inputs fixed `atr=2
 | **+Shock** | 1.55 (+0.01) | 1.07 (0) | — | — | Neutral |
 | **Gaussian+Volume (best SPY)** | **1.623** (187 tr) | **0.993** (-0.08) | 8.77% | 10.34% | Best SPY, **collapses QQQ** |
 | **gaussUseFilter=true (1.0σ×10)** | 0.946 (46 tr) | — | 12.11% | — | **Severe deadweight** (sticky) |
-| **Pruned (all 5 OFF, single RSI `divMin=1`, `bullVotes=RSI`)** | **1.523** (167 tr) | **1.032** (138 tr) | 9.36% | 12.46% | Partial restore, still below `strategy.pine` 1.708/1.592 |
+| **Pruned (all 5 OFF, single RSI `divMin=1`, `bullVotes=RSI`)** | **1.523** (167 tr [RETIRED]) | **1.032** (138 tr) | 9.36% | 12.46% | Partial restore, still below `strategy.pine` 1.708/1.592 |
 
 **Root Cause — Collinear Lag**: RSI, MACD histogram, OBV, MFI, VW-MACD are **collinear momentum transforms** of price/volume with similar 14-20 bar EMAs and 5-bar pivots. Stacking them (`divMin=3`) does not add orthogonal information — it adds **lagged, correlated votes** that increase false positives (135→170 trades) while diluting the single clean RSI divergence edge. The 5-oscillator `rsiBullDiv` requires `curLowPrice<prior && curRsi>prior+2 && (rsi<45)` — already strict; adding `macd>prior && macd<0` etc loosens to easier `>prior` without `>prior+2`, so `bullVotes>=3` is **more permissive** than single strict RSI, hence more trades, lower PF. Fisher/WaveTrend/%R are also 10-30 bar EMAs — same frequency band, no alpha.
 
-**Why Lean Won**: `strategy.pine` (single RSI `regularBull` + `obv/mfi` volume + `ema20>ema50` trend + `breakout20`) achieves **SPY 1.708 PF (119 tr, 16.99% DD)** and **QQQ 1.592 PF (89 tr)** with `atr=2.5`, and `FINAL` with `atr=2.8` + `strategy.exit` brackets achieves **1.819 SPY PF (118 tr, 11.20% DD)** historically. The lean model has **fewer, higher-quality pivots** and **native bracket exits** (`strategy.exit` with `stop`/`limit` re-invoked at +1.5R/+2.5R) vs bar-close `strategy.close`.
+**Why Lean Won**: `strategy.pine` (single RSI `regularBull` + `obv/mfi` volume + `ema20>ema50` trend + `breakout20`) achieves **SPY 1.708 PF (119 tr, 16.99% DD)** and **QQQ 1.592 PF (89 tr)** with `atr=2.5`, and `FINAL` with `atr=2.8` + `strategy.exit` brackets achieves **1.819 SPY PF (118 tr [RETIRED], 11.20% DD)** historically. The lean model has **fewer, higher-quality pivots** and **native bracket exits** (`strategy.exit` with `stop`/`limit` re-invoked at +1.5R/+2.5R) vs bar-close `strategy.close`.
 
 ### Pruning Decision
 All 5 new DSP/volume/macro filters set to `false` by default after ablation:
@@ -108,11 +108,11 @@ The suite retains %R/WaveTrend/Fisher/Fib **visually** but gates entries only on
 | Asset | TF | Net Profit % | PF | WR % | Trades | MaxDD % | Sharpe [Quarantined] | vs Threshold |
 |-------|----|--------------|----|------|--------|---------|----------------------|--------------|
 | **BATS:SPY** | 1D | +44.05% | **1.523** | 65.87% | 167 [RETIRED] | **9.36%** | 3.10 (non-decision-grade) | PF 1.70 ❌ (WR ✔, DD ✔) |
-| **BATS:QQQ** | 1D | +2.24% | **1.032** | 58.70% | 138 | 12.46% | 0.11 | PF 1.55 ❌ |
-| **BITSTAMP:BTCUSD** | 1D | +49.51% | **1.597** | 59.38% | 96 | 21.51% | 1.37 | PF 2.10 ❌ (DD 14% ❌) |
-| **BATS:SPY** | 1W | +14.89% | **1.673** | 64.29% | 42 | **5.81%** | 1.65 | PF 2.20 ❌ |
-| **BATS:QQQ** | 1W | +12.62% | **1.798** | 70.73% | 41 | 6.88% | 1.30 | PF 2.20 ❌ |
-| **BITSTAMP:BTCUSD** | 1W | **+13.30%** | **3.506** | 71.43% | 14 | **3.10%** | 3.06 | **PASS** |
+| **BATS:QQQ** | 1D | +2.24% | **1.032** | 58.70% | 138 | 12.46% | 0.11 (non-decision-grade) | PF 1.55 ❌ |
+| **BITSTAMP:BTCUSD** | 1D | +49.51% | **1.597** | 59.38% | 96 | 21.51% | 1.37 (non-decision-grade) | PF 2.10 ❌ (DD 14% ❌) |
+| **BATS:SPY** | 1W | +14.89% | **1.673** | 64.29% | 42 | **5.81%** | 1.65 (non-decision-grade) | PF 2.20 ❌ |
+| **BATS:QQQ** | 1W | +12.62% | **1.798** | 70.73% | 41 | 6.88% | 1.30 (non-decision-grade) | PF 2.20 ❌ |
+| **BITSTAMP:BTCUSD** | 1W | **+13.30%** | **3.506** | 71.43% | 14 | **3.10%** | 3.06 (non-decision-grade) | **PASS** (historical unverified) |
 
 **Single-RSI Baseline (`strategy.pine`, `atr=2.5`) for comparison**: SPY 1D 1.708 (119 tr, 16.99% DD), QQQ 1D 1.592 (89 tr), BTC 1D 2.066 (80 tr), SPY 1W 3.344 (28 tr), QQQ 1W 4.972 (27 tr) — meets SPY 1.70 and QQQ 1.55, confirming lean wins.
 

@@ -23,7 +23,7 @@
 
 ## Forward Metrics (Scraped from Strategy Tester)
 
-- **Number of forward trades executed:** 118
+- **Number of forward trades executed:** 118 [RETIRED historical figure — see Task 3]
 - **Profit Factor:** 1.819
 - **Win Rate:** 56.78%
 - **Net Profit %:** 74.08%

@@ -19,6 +19,8 @@ import asyncio
 import subprocess
 import socket
 
+sys.stdout.reconfigure(encoding='utf-8', line_buffering=True)
+
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT_DIR)
 import runner
@@ -33,7 +35,11 @@ CHROME_CANDIDATES = [
     r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
     r"C:\Users\RehmanPC\AppData\Local\Google\Chrome\Application\chrome.exe",
 ]
-CHROME_USER_DATA = r"C:\Users\RehmanPC\AppData\Local\Google\Chrome\User Data"
+CHROME_USER_DATA = (
+    r"C:\Users\RehmanPC\ChromeDevProfile"
+    if os.path.exists(r"C:\Users\RehmanPC\ChromeDevProfile")
+    else r"C:\Users\RehmanPC\AppData\Local\Google\Chrome\User Data"
+)
 
 def is_port_open(port=9222):
     try:
@@ -164,10 +170,19 @@ def ensure_browser():
     args = [chrome, "--remote-debugging-port=9222", f'--user-data-dir={CHROME_USER_DATA}', "--no-first-run", "--no-default-browser-check", "--remote-allow-origins=*", "https://www.tradingview.com/chart/"]
     try:
         subprocess.Popen(args, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, creationflags=subprocess.DETACHED_PROCESS if os.name=="nt" else 0)
-        for _ in range(20):
+        for _ in range(10):
             if is_port_open(9222):
                 # Verify owner is Chrome
                 print("[PERSIST] Chrome launched and listening on 9222")
+                return "chrome"
+            time.sleep(1)
+        # Fallback to headless mode if GUI Chrome did not bind in background/terminal session
+        print("[PERSIST] GUI Chrome did not bind 9222; attempting headless fallback...")
+        args_headless = [chrome, "--remote-debugging-port=9222", f'--user-data-dir={CHROME_USER_DATA}', "--no-first-run", "--no-default-browser-check", "--remote-allow-origins=*", "--headless=new", "https://www.tradingview.com/chart/"]
+        subprocess.Popen(args_headless, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, creationflags=subprocess.DETACHED_PROCESS if os.name=="nt" else 0)
+        for _ in range(10):
+            if is_port_open(9222):
+                print("[PERSIST] Chrome (headless) launched and listening on 9222")
                 return "chrome"
             time.sleep(1)
         raise RuntimeError("Chrome did not open port 9222 within 20s")

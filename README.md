@@ -159,12 +159,12 @@ if currentGainR>=1.5 and not stage1Locked
 | Asset | TF | Net % | PF | WR % | Trades | DD % | Sharpe [Quarantined] | Threshold |
 |-------|----|-------|----|------|--------|------|----------------------|-----------|
 | **BATS:SPY 1D (historical unverified, 2026-09-07)** | 1D | **+74.08%** | **1.819** | 56.78% | 118 [RETIRED] | **11.20%** | 3.76 (non-decision-grade) | PF 1.70 ✔ WR ✔ DD 12% ✔ |
-| BATS:SPY 1D (pruned suite, 1.523, 167 tr, 9.36% DD) | 1D | +44.05% | 1.523 | 65.87% | 167 [RETIRED] | 9.36% | 3.10 (non-decision-grade) | PF 1.70 ✘ |
+| BATS:SPY 1D (pruned suite, 1.523, 167 tr [RETIRED], 9.36% DD) | 1D | +44.05% | 1.523 | 65.87% | 167 [RETIRED] | 9.36% | 3.10 (non-decision-grade) | PF 1.70 ✘ |
 | BATS:QQQ 1D (baseline lean) | 1D | — | **1.592** | — | 89 | 11.51% | — | PF 1.55 ✔ |
 | BITSTAMP:BTCUSD 1D (baseline) | 1D | — | 2.066 | — | 80 | 26.09% | — | PF 2.10 ✘ DD ✘ |
 | BATS:SPY 1W | 1W | — | 3.344 | — | 28 | — | — | PF 2.20 ✔ |
 | BATS:QQQ 1W | 1W | — | 4.972 | — | 27 | — | — | PF 2.20 ✔ |
-| BITSTAMP:BTCUSD 1W | 1W | +13.30% | **3.506** | 71.43% | 14 | **3.10%** | 3.06 | **PASS** |
+| BITSTAMP:BTCUSD 1W | 1W | +13.30% | **3.506** | 71.43% | 14 | **3.10%** | 3.06 (non-decision-grade) | **PASS** (historical unverified) |
 
 *Live 2026-09-07 capture after consolidation on `BATS:SPY 1D` matches sweep optimum 1.819 (see `metrics/clean_chart_screenshot.png`). Prior pruned suite traded +48 trades for +9pp WR, -1.8pp DD at cost of PF; lean reclaims.*
 
