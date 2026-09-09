@@ -31,6 +31,17 @@ async def main():
         for e in out["errors"]:
             print(f"  line {e.get('line')}:{e.get('col')} - {e.get('message')}")
         sys.exit(2)
+    # Hardening: Monaco-marker lookup can miss; the Strategy Tester report pane
+    # also surfaces Pine runtime/compile errors as "Caution! ..." text.
+    raw = out.get("raw_report_text") or ""
+    err_sigs = ["Caution!", "cannot call", "Syntax error", "Script error",
+                "Mismatched input", "no viable alternative"]
+    hits = [s for s in err_sigs if s in raw]
+    if hits or "requires trade data" in raw:
+        print("COMPILE_OR_NODATA (report pane): signatures=" + str(hits))
+        print("--- report head ---")
+        print(raw[:1200])
+        sys.exit(3)
     print("COMPILE_OK")
     print(json.dumps({k: v for k, v in out.items() if k != "raw_report_text"}, indent=2))
     await client.close()

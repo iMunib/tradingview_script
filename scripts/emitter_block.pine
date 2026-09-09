@@ -1,0 +1,60 @@
+// ─── X. TRADE-LOG EMITTER (temporary evaluation block — appended by
+// scripts/export_trade_logs.py to a COPY of the variant. Never committed
+// to FINAL_OPTIMIZED_STRATEGY.pine. Plots per-exit numerics ONLY on bars
+// where a trade closed; Python reads them from the chart model and writes
+// metrics/trade_log_<asset>_<period>.csv. Visual pollution is irrelevant:
+// the variant is purged from the chart after reading.
+var float emitRunHi = na
+var float emitRunLo = na
+if strategy.position_size > 0
+    emitRunHi := na(emitRunHi) ? high : math.max(emitRunHi, high)
+    emitRunLo := na(emitRunLo) ? low : math.min(emitRunLo, low)
+else
+    emitRunHi := na
+    emitRunLo := na
+bool xActive = exitInspectBar and strategy.closedtrades > 0
+float xEntryP = na
+float xExitP = na
+float xEntryT = na
+float xExitT = na
+float xQty = na
+float xProfit = na
+float xR = na
+float xRunPct = na
+float xDdPct = na
+int xCode = 0
+if xActive
+    int xn = strategy.closedtrades - 1
+    xEntryP := strategy.closedtrades.entry_price(xn)
+    xExitP := strategy.closedtrades.exit_price(xn)
+    xEntryT := strategy.closedtrades.entry_time(xn)
+    xExitT := strategy.closedtrades.exit_time(xn)
+    xQty := strategy.closedtrades.size(xn)
+    xProfit := strategy.closedtrades.profit(xn)
+    xR := not na(unitR) and unitR != 0 ? (xExitP - xEntryP) / unitR : na
+    float rh = nz(emitRunHi[1], high)
+    float rl = nz(emitRunLo[1], low)
+    xRunPct := (rh - xEntryP) / xEntryP * 100.0
+    xDdPct := (xEntryP - rl) / xEntryP * 100.0
+    if str.contains(lastComment, "Exit Target")
+        xCode := 1
+    else if str.contains(lastComment, "Exit Stop")
+        xCode := 2
+    else if str.contains(lastComment, "Strong Exit")
+        xCode := 3
+    else if str.contains(lastComment, "Exit Reversal")
+        xCode := 4
+    else if str.contains(lastComment, "Window End")
+        xCode := 5
+plot(xActive ? xCode : na, "X_CODE")
+plot(xEntryT, "X_ENTRY_T")
+plot(xExitT, "X_EXIT_T")
+plot(xEntryP, "X_ENTRY_P")
+plot(xExitP, "X_EXIT_P")
+plot(xQty, "X_QTY")
+plot(xProfit, "X_PROFIT")
+plot(xR, "X_R")
+plot(xRunPct, "X_RUN_PCT")
+plot(xDdPct, "X_DD_PCT")
+plot(xActive ? 1 : na, "X_FLAG")
+plot(justExited ? 1 : na, "X_JUST")

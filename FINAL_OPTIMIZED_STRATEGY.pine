@@ -25,6 +25,7 @@ group_cont = "█ Trend-Continuation Pullback (Unified 42-60)"
 enableContinuation = input.bool(true, "Enable Trend-Continuation Pullback", group=group_cont)
 contRsiMin         = input.float(42.0, "Pullback RSI Min", minval=30.0, maxval=50.0, group=group_cont)
 contRsiMax         = input.float(60.0, "Pullback RSI Max", minval=50.0, maxval=70.0, group=group_cont)
+minCooldownBars    = input.int(3, "Min Bars Post-Exit (cooldown)", minval=1, maxval=15, group=group_cont)
 
 group_macro = "█ Multi-Timeframe Regime Filters"
 useWeeklyFilter   = input.bool(true, "Require Macro Regime EMA Filter", group=group_macro)
@@ -242,11 +243,11 @@ pullbackRetest = (low <= fastEma and close > fastEma) or ta.crossover(close, fas
 rsiZone = rsi >= contRsiMin and rsi <= contRsiMax
 continuationTrigger = enableContinuation and trendAligned and pullbackRetest and rsiZone and volumeConfirmed
 
-// Hysteresis cooldown: 3-bar daily / 2-bar weekly post-exit freeze (kills Buy/Sell/Buy churn)
+// Hysteresis cooldown: 2-bar weekly / minCooldownBars daily post-exit freeze (kills Buy/Sell/Buy churn)
 var int lastExitBar = -9999
 if strategy.position_size[1] > 0 and strategy.position_size == 0
     lastExitBar := bar_index
-cooldownPassed = (bar_index - lastExitBar) >= (isWeekly ? 2 : 3)
+cooldownPassed = (bar_index - lastExitBar) >= (isWeekly ? 2 : minCooldownBars)
 
 longSetup = macroGate and (reversalSetup or continuationTrigger) and inTradeWindow and cooldownPassed
 longEntry = longSetup and not longSetup[1]
@@ -255,21 +256,33 @@ longEntry = longSetup and not longSetup[1]
 isStrongBuy = longEntry and (bullVotes >= 2 or (prReversal and buyVolPct > 0.60))
 isBuy = longEntry and not isStrongBuy
 isStrongExit = strategy.position_size > 0 and ((bearVotes >= 2 and fish > 1.30) or (prOverbought and sellVolPct > 0.60))
-// Peak/Reversal exit trigger (renamed — was anonymous inside exitPlot)
-isPeakExit = strategy.position_size > 0 and (confluenceBearFresh or fishExitBear) and barstate.isconfirmed and not isStrongExit
+isReversalExit = strategy.position_size > 0 and (confluenceBearFresh or fishExitBear) and barstate.isconfirmed and not isStrongExit
 // Window-forced close is a backtest artifact, not an edge signal
-isWindowExit = useDateFilter and not inTradeWindow and strategy.position_size > 0
-isStandardExit = strategy.position_size[1] > 0 and strategy.position_size == 0 and not isStrongExit
-// Last exit reason latch for HUD (bracket leg detail lives in trade-list comment_profit/comment_loss)
+isWindowExit = strategy.position_size > 0 and (useDateFilter and not inTradeWindow)
+// Native closed-trade inspection: distinguish bracket TARGET vs STOP fills on the exit bar.
+// closedtrades visibility lands on the exit bar or one bar later depending on fill timing,
+// so the inspection window covers both (justExited or justExited[1]).
+justExited = strategy.position_size == 0 and strategy.position_size[1] > 0
+exitInspectBar = justExited or justExited[1]
+string lastComment = ""
+if strategy.closedtrades > 0
+    string ec = strategy.closedtrades.exit_comment(strategy.closedtrades - 1)
+    lastComment := na(ec) ? "" : ec
+isTargetExit = exitInspectBar and str.contains(lastComment, "Exit Target")
+isStopExit = exitInspectBar and str.contains(lastComment, "Exit Stop") and not isTargetExit
+// Last exit reason latch for HUD (mutually exclusive by construction: in-position
+// signals carry position>0, bracket fills carry position==0)
 var string lastExitReason = "—"
 if isStrongExit and barstate.isconfirmed
-    lastExitReason := "STRONG"
-else if isPeakExit
+    lastExitReason := "STRONG EXIT"
+else if isReversalExit
     lastExitReason := "REVERSAL"
+else if isTargetExit
+    lastExitReason := "TARGET HIT"
+else if isStopExit
+    lastExitReason := "STOPPED OUT"
 else if isWindowExit
     lastExitReason := "WINDOW"
-else if isStandardExit
-    lastExitReason := "BRACKET (STOP/TARGET — see trade-list comment)"
 
 // ─── 8. RISK SIZING & ASYMMETRIC BRACKETS ─────────────────────────────────────
 atr = ta.atr(14)
@@ -320,7 +333,7 @@ if strategy.position_size > 0
         strategy.exit("Bracket Exit", from_entry="Long", stop=stopLossPrice, limit=targetPrice, comment_profit="Exit Target", comment_loss="Exit Stop")
     if isStrongExit and barstate.isconfirmed
         strategy.close("Long", comment="Strong Exit")
-    else if isPeakExit
+    else if isReversalExit
         strategy.close("Long", comment="Exit Reversal")
     if useDateFilter and not inTradeWindow
         strategy.close("Long", comment="Window End")
@@ -331,13 +344,14 @@ plot(showExecutionLines and strategy.position_size > 0 ? targetPrice : na, "Targ
 
 plotshape(isStrongBuy, title="STRONG BUY", style=shape.triangleup, location=location.belowbar, color=color.new(#006400, 0), size=size.small, text="STRONG BUY", textcolor=color.white)
 plotshape(isBuy, title="BUY", style=shape.triangleup, location=location.belowbar, color=color.new(color.green, 0), size=size.tiny, text="BUY", textcolor=color.white)
-// Mutually-exclusive exit visuals (priority: STRONG > REVERSAL > BRACKET-echo; WINDOW suppressed unless date filter on)
-exitPlotBracket = isStandardExit and not isStrongExit and not isPeakExit and lastExitReason != "WINDOW"
+// Mutually-exclusive exit visuals (in-position signals carry position>0;
+// bracket fills carry position==0, so classes cannot co-fire)
 plotshape(isStrongExit, title="STRONG EXIT", style=shape.triangledown, location=location.abovebar, color=color.new(#8B0000, 0), size=size.small, text="STRONG EXIT", textcolor=color.white)
-plotshape(isPeakExit, title="EXIT REVERSAL", style=shape.triangledown, location=location.abovebar, color=color.new(#CD5C5C, 0), size=size.tiny, text="EXIT REVERSAL", textcolor=color.white)
-plotshape(exitPlotBracket, title="EXIT BRACKET", style=shape.triangledown, location=location.abovebar, color=color.new(color.orange, 0), size=size.tiny, text="EXIT STOP/TARGET", textcolor=color.white)
-plotshape(isWindowExit and useDateFilter, title="EXIT WINDOW", style=shape.diamond, location=location.abovebar, color=color.new(color.gray, 0), size=size.tiny, text="WINDOW", textcolor=color.white)
-exitPlot = isStrongExit or isPeakExit or exitPlotBracket or (isWindowExit and useDateFilter)
+plotshape(isTargetExit, title="EXIT TARGET", style=shape.diamond, location=location.abovebar, color=color.new(color.teal, 0), size=size.small, text="TARGET", textcolor=color.white)
+plotshape(isStopExit, title="EXIT STOP", style=shape.square, location=location.abovebar, color=color.new(color.orange, 0), size=size.small, text="STOP", textcolor=color.white)
+plotshape(isReversalExit, title="EXIT REVERSAL", style=shape.triangledown, location=location.abovebar, color=color.new(#CD5C5C, 0), size=size.tiny, text="REVERSAL", textcolor=color.white)
+plotshape(isWindowExit and useDateFilter, title="WINDOW END", style=shape.circle, location=location.abovebar, color=color.new(color.gray, 0), size=size.tiny, text="WINDOW", textcolor=color.white)
+exitPlot = isStrongExit or isTargetExit or isStopExit or isReversalExit or (isWindowExit and useDateFilter)
 
 var table hud = table.new(position.top_right, 2, 3, bgcolor=color.new(color.black, 80), border_color=color.new(color.gray, 60), border_width=1)
 if barstate.islast and showHUD
@@ -355,15 +369,18 @@ if barstate.islast and showHUD
     else if isStrongExit
         statTxt := "STRONG EXIT"
         statBg := color.new(color.red, 20)
-    else if isPeakExit
-        statTxt := "EXIT REVERSAL"
+    else if isTargetExit
+        statTxt := "TARGET HIT"
+        statBg := color.new(color.teal, 20)
+    else if isStopExit
+        statTxt := "STOPPED OUT"
+        statBg := color.new(color.orange, 20)
+    else if isReversalExit
+        statTxt := "REVERSAL"
         statBg := color.new(#CD5C5C, 20)
     else if isWindowExit and useDateFilter
-        statTxt := "EXIT WINDOW (artifact)"
+        statTxt := "WINDOW (artifact)"
         statBg := color.new(color.gray, 20)
-    else if exitPlotBracket
-        statTxt := "EXIT STOP/TARGET"
-        statBg := color.new(color.orange, 20)
     else if strategy.position_size == 0 and lastExitReason != "—"
         statTxt := "LAST EXIT: " + lastExitReason
         statBg := color.new(color.gray, 20)

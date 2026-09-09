@@ -33,11 +33,17 @@ SEED = 7
 def load(path):
     with open(path, encoding="utf-8") as f:
         rows = list(csv.DictReader(f))
-    need = {"entry_date", "exit_date", "entry_price", "exit_price", "pnl", "exit_reason"}
+    need = {"entry_date", "exit_date", "entry_price", "exit_price",
+            "exit_reason"}
     missing = need - set(rows[0].keys() if rows else [])
     if missing:
         raise ValueError(f"{path}: missing columns {sorted(missing)}")
-    pnls = [float(r["pnl"]) for r in rows]
+    # P&L column: 'pnl' canonical; 'profit_usd' (export_trade_logs.py) aliased
+    pnl_key = "pnl" if "pnl" in rows[0] else (
+        "profit_usd" if "profit_usd" in rows[0] else None)
+    if pnl_key is None:
+        raise ValueError(f"{path}: missing P&L column (need 'pnl' or 'profit_usd')")
+    pnls = [float(r[pnl_key]) for r in rows]
     return rows, pnls
 
 

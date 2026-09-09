@@ -1,0 +1,296 @@
+{
+  "CD3_SPY_1D": {
+    "cooldown": 3,
+    "cell": "SPY_1D",
+    "net_profit_pct": 1.59,
+    "profit_factor": 1.018,
+    "max_drawdown_pct": 20.66,
+    "win_rate_pct": 60.09,
+    "winning_trades": 128,
+    "total_closed_trades": 213
+  },
+  "CD3_QQQ_1D": {
+    "cooldown": 3,
+    "cell": "QQQ_1D",
+    "net_profit_pct": 1.33,
+    "profit_factor": 1.017,
+    "max_drawdown_pct": 15.49,
+    "win_rate_pct": 53.94,
+    "winning_trades": 130,
+    "total_closed_trades": 241
+  },
+  "CD3_BTCUSD_1D": {
+    "cooldown": 3,
+    "cell": "BTCUSD_1D",
+    "net_profit_pct": -2.69,
+    "profit_factor": 0.936,
+    "max_drawdown_pct": 14.83,
+    "win_rate_pct": 53.85,
+    "winning_trades": 49,
+    "total_closed_trades": 91
+  },
+  "CD3_SPY_1W": {
+    "cooldown": 3,
+    "cell": "SPY_1W",
+    "net_profit_pct": 8.68,
+    "profit_factor": 1.791,
+    "max_drawdown_pct": 3.28,
+    "win_rate_pct": 64.1,
+    "winning_trades": 25,
+    "total_closed_trades": 39
+  },
+  "CD3_QQQ_1W": {
+    "cooldown": 3,
+    "cell": "QQQ_1W",
+    "net_profit_pct": 9.91,
+    "profit_factor": 1.599,
+    "max_drawdown_pct": 4.76,
+    "win_rate_pct": 54.55,
+    "winning_trades": 30,
+    "total_closed_trades": 55
+  },
+  "CD3_BTCUSD_1W": {
+    "cooldown": 3,
+    "cell": "BTCUSD_1W",
+    "net_profit_pct": 18.3,
+    "profit_factor": 6.915,
+    "max_drawdown_pct": 1.85,
+    "win_rate_pct": 64.71,
+    "winning_trades": 11,
+    "total_closed_trades": 17
+  },
+  "CD5_SPY_1D": {
+    "cooldown": 5,
+    "cell": "SPY_1D",
+    "net_profit_pct": 4.32,
+    "profit_factor": 1.046,
+    "max_drawdown_pct": 21.77,
+    "win_rate_pct": 60.51,
+    "winning_trades": 118,
+    "total_closed_trades": 195
+  },
+  "CD5_QQQ_1D": {
+    "cooldown": 5,
+    "cell": "QQQ_1D",
+    "net_profit_pct": -11.93,
+    "profit_factor": 0.832,
+    "max_drawdown_pct": 18.48,
+    "win_rate_pct": 50.46,
+    "winning_trades": 110,
+    "total_closed_trades": 218
+  },
+  "CD5_BTCUSD_1D": {
+    "cooldown": 5,
+    "cell": "BTCUSD_1D",
+    "net_profit_pct": 0.21,
+    "profit_factor": 1.005,
+    "max_drawdown_pct": 14.9,
+    "win_rate_pct": 52.87,
+    "winning_trades": 46,
+    "total_closed_trades": 87
+  },
+  "CD5_SPY_1W": {
+    "cooldown": 5,
+    "cell": "SPY_1W",
+    "net_profit_pct": 8.68,
+    "profit_factor": 1.791,
+    "max_drawdown_pct": 3.28,
+    "win_rate_pct": 64.1,
+    "winning_trades": 25,
+    "total_closed_trades": 39
+  },
+  "CD5_QQQ_1W": {
+    "cooldown": 5,
+    "cell": "QQQ_1W",
+    "net_profit_pct": 9.91,
+    "profit_factor": 1.599,
+    "max_drawdown_pct": 4.76,
+    "win_rate_pct": 54.55,
+    "winning_trades": 30,
+    "total_closed_trades": 55
+  },
+  "CD5_BTCUSD_1W": {
+    "cooldown": 5,
+    "cell": "BTCUSD_1W",
+    "net_profit_pct": 18.3,
+    "profit_factor": 6.915,
+    "max_drawdown_pct": 1.85,
+    "win_rate_pct": 64.71,
+    "winning_trades": 11,
+    "total_closed_trades": 17
+  },
+  "CD8_SPY_1D": {
+    "cooldown": 8,
+    "cell": "SPY_1D",
+    "net_profit_pct": 13.09,
+    "profit_factor": 1.166,
+    "max_drawdown_pct": 14.53,
+    "win_rate_pct": 62.64,
+    "winning_trades": 109,
+    "total_closed_trades": 174
+  },
+  "CD8_QQQ_1D": {
+    "cooldown": 8,
+    "cell": "QQQ_1D",
+    "net_profit_pct": -8.02,
+    "profit_factor": 0.867,
+    "max_drawdown_pct": 15.69,
+    "win_rate_pct": 48.95,
+    "winning_trades": 93,
+    "total_closed_trades": 190
+  },
+  "CD8_BTCUSD_1D": {
+    "cooldown": 8,
+    "cell": "BTCUSD_1D",
+    "net_profit_pct": -0.56,
+    "profit_factor": 0.986,
+    "max_drawdown_pct": 14.97,
+    "win_rate_pct": 56.1,
+    "winning_trades": 46,
+    "total_closed_trades": 82
+  },
+  "CD8_SPY_1W": {
+    "cooldown": 8,
+    "cell": "SPY_1W",
+    "net_profit_pct": 8.68,
+    "profit_factor": 1.791,
+    "max_drawdown_pct": 3.28,
+    "win_rate_pct": 64.1,
+    "winning_trades": 25,
+    "total_closed_trades": 39
+  },
+  "CD8_QQQ_1W": {
+    "cooldown": 8,
+    "cell": "QQQ_1W",
+    "net_profit_pct": 9.91,
+    "profit_factor": 1.599,
+    "max_drawdown_pct": 4.76,
+    "win_rate_pct": 54.55,
+    "winning_trades": 30,
+    "total_closed_trades": 55
+  },
+  "CD8_BTCUSD_1W": {
+    "cooldown": 8,
+    "cell": "BTCUSD_1W",
+    "net_profit_pct": 18.3,
+    "profit_factor": 6.915,
+    "max_drawdown_pct": 1.85,
+    "win_rate_pct": 64.71,
+    "winning_trades": 11,
+    "total_closed_trades": 17
+  },
+  "CD13_SPY_1D": {
+    "cooldown": 13,
+    "cell": "SPY_1D",
+    "net_profit_pct": 11.02,
+    "profit_factor": 1.174,
+    "max_drawdown_pct": 11.24,
+    "win_rate_pct": 59.73,
+    "winning_trades": 89,
+    "total_closed_trades": 149
+  },
+  "CD13_QQQ_1D": {
+    "cooldown": 13,
+    "cell": "QQQ_1D",
+    "net_profit_pct": -5.65,
+    "profit_factor": 0.891,
+    "max_drawdown_pct": 12.74,
+    "win_rate_pct": 50.63,
+    "winning_trades": 80,
+    "total_closed_trades": 158
+  },
+  "CD13_BTCUSD_1D": {
+    "cooldown": 13,
+    "cell": "BTCUSD_1D",
+    "net_profit_pct": -0.49,
+    "profit_factor": 0.987,
+    "max_drawdown_pct": 15.5,
+    "win_rate_pct": 54.55,
+    "winning_trades": 42,
+    "total_closed_trades": 77
+  },
+  "CD13_SPY_1W": {
+    "cooldown": 13,
+    "cell": "SPY_1W",
+    "net_profit_pct": 8.68,
+    "profit_factor": 1.791,
+    "max_drawdown_pct": 3.28,
+    "win_rate_pct": 64.1,
+    "winning_trades": 25,
+    "total_closed_trades": 39
+  },
+  "CD13_QQQ_1W": {
+    "cooldown": 13,
+    "cell": "QQQ_1W",
+    "net_profit_pct": 9.91,
+    "profit_factor": 1.599,
+    "max_drawdown_pct": 4.76,
+    "win_rate_pct": 54.55,
+    "winning_trades": 30,
+    "total_closed_trades": 55
+  },
+  "CD13_BTCUSD_1W": {
+    "cooldown": 13,
+    "cell": "BTCUSD_1W",
+    "net_profit_pct": 18.3,
+    "profit_factor": 6.915,
+    "max_drawdown_pct": 1.85,
+    "win_rate_pct": 64.71,
+    "winning_trades": 11,
+    "total_closed_trades": 17
+  },
+  "FIXED_SPY_1D": {
+    "cell": "SPY_1D",
+    "net_profit_pct": 2.92,
+    "profit_factor": 1.033,
+    "max_drawdown_pct": 18.82,
+    "win_rate_pct": 60.09,
+    "winning_trades": 128,
+    "total_closed_trades": 213
+  },
+  "FIXED_QQQ_1D": {
+    "cell": "QQQ_1D",
+    "net_profit_pct": 2.46,
+    "profit_factor": 1.031,
+    "max_drawdown_pct": 15.98,
+    "win_rate_pct": 53.94,
+    "winning_trades": 130,
+    "total_closed_trades": 241
+  },
+  "FIXED_BTCUSD_1D": {
+    "cell": "BTCUSD_1D",
+    "net_profit_pct": -1.8,
+    "profit_factor": 0.96,
+    "max_drawdown_pct": 15.79,
+    "win_rate_pct": 53.85,
+    "winning_trades": 49,
+    "total_closed_trades": 91
+  },
+  "FIXED_SPY_1W": {
+    "cell": "SPY_1W",
+    "net_profit_pct": 8.48,
+    "profit_factor": 1.826,
+    "max_drawdown_pct": 3.13,
+    "win_rate_pct": 64.1,
+    "winning_trades": 25,
+    "total_closed_trades": 39
+  },
+  "FIXED_QQQ_1W": {
+    "cell": "QQQ_1W",
+    "net_profit_pct": 9.72,
+    "profit_factor": 1.602,
+    "max_drawdown_pct": 4.78,
+    "win_rate_pct": 54.55,
+    "winning_trades": 30,
+    "total_closed_trades": 55
+  },
+  "FIXED_BTCUSD_1W": {
+    "cell": "BTCUSD_1W",
+    "net_profit_pct": 17.16,
+    "profit_factor": 6.822,
+    "max_drawdown_pct": 1.85,
+    "win_rate_pct": 64.71,
+    "winning_trades": 11,
+    "total_closed_trades": 17
+  }
+}
