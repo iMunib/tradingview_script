@@ -1,0 +1,16 @@
+{
+  "SPY_1D_Full": {
+    "symbol": "BATS:SPY",
+    "interval": "1D",
+    "sample": "Full Chart History",
+    "net_profit_pct": 18.93,
+    "net_profit_raw": "+18,925.11USD+18.93%",
+    "profit_factor": 2.091,
+    "max_drawdown_pct": 6.89,
+    "max_drawdown_raw": "7,865.85USD6.89%",
+    "win_rate_pct": 63.64,
+    "winning_trades": 21,
+    "total_closed_trades": 33,
+    "sharpe_ratio": 1.75
+  }
+}

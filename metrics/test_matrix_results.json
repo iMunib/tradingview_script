@@ -1,0 +1,122 @@
+{
+  "BATS:SPY_1D_IS": {
+    "symbol": "BATS:SPY",
+    "interval": "1D",
+    "sample": "IS",
+    "pf": 1.564,
+    "trades": 41,
+    "win_rate": 56.1,
+    "net_pct": 14.54,
+    "dd_pct": 7.36
+  },
+  "BATS:QQQ_1D_IS": {
+    "symbol": "BATS:QQQ",
+    "interval": "1D",
+    "sample": "IS",
+    "pf": 1.917,
+    "trades": 38,
+    "win_rate": 55.26,
+    "net_pct": 23.59,
+    "dd_pct": 5.28
+  },
+  "BITSTAMP:BTCUSD_1D_IS": {
+    "symbol": "BITSTAMP:BTCUSD",
+    "interval": "1D",
+    "sample": "IS",
+    "pf": 2.007,
+    "trades": 36,
+    "win_rate": 50.0,
+    "net_pct": 25.1,
+    "dd_pct": 5.15
+  },
+  "BATS:SPY_1D_OOS": {
+    "symbol": "BATS:SPY",
+    "interval": "1D",
+    "sample": "OOS",
+    "pf": 1.19,
+    "trades": 7,
+    "win_rate": 57.14,
+    "net_pct": 2.07,
+    "dd_pct": 3.4
+  },
+  "BATS:QQQ_1D_OOS": {
+    "symbol": "BATS:QQQ",
+    "interval": "1D",
+    "sample": "OOS",
+    "pf": 1.439,
+    "trades": 8,
+    "win_rate": 37.5,
+    "net_pct": 2.18,
+    "dd_pct": 3.26
+  },
+  "BITSTAMP:BTCUSD_1D_OOS": {
+    "symbol": "BITSTAMP:BTCUSD",
+    "interval": "1D",
+    "sample": "OOS",
+    "pf": 0.393,
+    "trades": 7,
+    "win_rate": 42.86,
+    "net_pct": -3.66,
+    "dd_pct": 4.25
+  },
+  "BATS:SPY_1W_IS": {
+    "symbol": "BATS:SPY",
+    "interval": "1W",
+    "sample": "IS",
+    "pf": 2.124,
+    "trades": 24,
+    "win_rate": 66.67,
+    "net_pct": 15.64,
+    "dd_pct": 3.81
+  },
+  "BATS:QQQ_1W_IS": {
+    "symbol": "BATS:QQQ",
+    "interval": "1W",
+    "sample": "IS",
+    "pf": 2.447,
+    "trades": 27,
+    "win_rate": 70.37,
+    "net_pct": 20.97,
+    "dd_pct": 2.95
+  },
+  "BITSTAMP:BTCUSD_1W_IS": {
+    "symbol": "BITSTAMP:BTCUSD",
+    "interval": "1W",
+    "sample": "IS",
+    "pf": 2.129,
+    "trades": 16,
+    "win_rate": 56.25,
+    "net_pct": 12.6,
+    "dd_pct": 3.61
+  },
+  "BATS:SPY_1W_OOS": {
+    "symbol": "BATS:SPY",
+    "interval": "1W",
+    "sample": "OOS",
+    "pf": 0.751,
+    "trades": 5,
+    "win_rate": 40.0,
+    "net_pct": 0.03,
+    "dd_pct": 3.91
+  },
+  "BATS:QQQ_1W_OOS": {
+    "symbol": "BATS:QQQ",
+    "interval": "1W",
+    "sample": "OOS",
+    "pf": 0.518,
+    "trades": 5,
+    "win_rate": 20.0,
+    "net_pct": -3.13,
+    "dd_pct": 5.09
+  },
+  "BITSTAMP:BTCUSD_1W_OOS": {
+    "symbol": "BITSTAMP:BTCUSD",
+    "interval": "1W",
+    "sample": "OOS",
+    "pf": 17.33,
+    "trades": 2,
+    "win_rate": 50.0,
+    "net_pct": 1.56,
+    "dd_pct": 1.32
+  }
+}

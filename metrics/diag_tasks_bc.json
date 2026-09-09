@@ -1,0 +1,1047 @@
+{
+  "SPY_1D_IS_BASE": {
+    "symbol": "BATS:SPY",
+    "interval": "1D",
+    "total_pnl_usd": 18925.11,
+    "gross_profit": 36269.48,
+    "gross_loss": 17344.37,
+    "profit_factor": 2.091,
+    "max_drawdown_pct": 6.89,
+    "win_rate_pct": 63.64,
+    "winning_trades": 21,
+    "total_closed_trades": 33,
+    "status": "ok",
+    "pf_crosscheck_ok": true,
+    "phase": "SPY_1D_IS_BASE",
+    "elapsed_sec": 9.1,
+    "trades_enum": {
+      "title": "FINAL_BASELINE (14, 2.8, 1.5, 20, 5, 5, 5, 60, 2, 15, true, true, false, true)",
+      "found": [
+        {
+          "method": "properties",
+          "isObj": true,
+          "keys": [
+            "_listeners",
+            "_muteChildChanges",
+            "_owner",
+            "_name",
+            "_childs",
+            "_dependents",
+            "_schema",
+            "_themedColors",
+            "_restoreFactoryDefaultsEvent",
+            "_replaceThemedColorsOnThemeChange",
+            "_forbidSavingDefaults",
+            "_defaultName",
+            "_useUserPreferences",
+            "_saveNonDefaultUserPreferencesOnly",
+            "_ignoreAllowSavingDefaults",
+            "_saveDefaultsConsumer",
+            "_factoryDefaultsSupplier",
+            "_allStateKeys",
+            "_excludedStateKeys",
+            "_nonThemedDefaultsKeys",
+            "_themedDefaultsKeys",
+            "_allDefaultsKeys",
+            "_excludedDefaultsKeys",
+            "_excludedTemplateKeys",
+            "_alwaysSaveDefaultKeys",
+            "_theme",
+            "inputs",
+            "styles",
+            "bands",
+            "graphics"
+          ]
+        },
+        {
+          "method": "hasStateForAlert",
+          "scalar": "true"
+        },
+        {
+          "method": "canHasAlertOnLineTools",
+          "scalar": "false"
+        },
+        {
+          "method": "inputsForAlertState",
+          "isObj": true,
+          "keys": [
+            "text",
+            "pineId",
+            "pineVersion",
+            "pineFeatures",
+            "in_0",
+            "in_1",
+            "in_2",
+            "in_3",
+            "in_4",
+            "in_5",
+            "in_6",
+            "in_7",
+            "in_8",
+            "in_9",
+            "in_10",
+            "in_11",
+            "in_12",
+            "in_13",
+            "in_14",
+            "in_15",
+            "in_16",
+            "in_17",
+            "in_18",
+            "in_19",
+            "in_20",
+            "in_21",
+            "in_22",
+            "in_23",
+            "in_24",
+            "in_25"
+          ]
+        },
+        {
+          "method": "barsIndexes",
+          "isObj": true,
+          "keys": []
+        },
+        {
+          "method": "reportChanged",
+          "isObj": true,
+          "keys": [
+            "fire",
+            "_listeners"
+          ]
+        },
+        {
+          "method": "strategyOrdersPaneView",
+          "isObj": true,
+          "keys": [
+            "_invalidated",
+            "_textWidths",
+            "_study",
+            "_series",
+            "_model",
+            "_orderArrow",
+            "_priceArrow",
+            "_previousFont",
+            "_text",
+            "_items"
+          ]
+        },
+        {
+          "method": "activeState",
+          "scalar": "false"
+        },
+        {
+          "method": "state",
+          "isObj": true,
+          "keys": [
+            "type",
+            "id",
+            "state",
+            "zorder",
+            "ownFirstValue",
+            "metaInfo"
+          ]
+        },
+        {
+          "method": "pineSourceCodeModel",
+          "isObj": true,
+          "keys": []
+        },
+        {
+          "method": "_titleInputs",
+          "isObj": true,
+          "keys": [
+            "in_0",
+            "in_1",
+            "in_2",
+            "in_3",
+            "in_4",
+            "in_5",
+            "in_6",
+            "in_7",
+            "in_8",
+            "in_9",
+            "in_10",
+            "in_11",
+            "in_12",
+            "in_13",
+            "__profile"
+          ]
+        },
+        {
+          "method": "_getTelemetryObjectName",
+          "scalar": "strategy"
+        },
+        {
+          "method": "propertiesPatched",
+          "isObj": true,
+          "keys": []
+        },
+        {
+          "method": "isDraggable",
+          "scalar": "true"
+        },
+        {
+          "method": "performance",
+          "isObj": true,
+          "keys": [
+            "subscribe",
+            "unsubscribe",
+            "value",
+            "when",
+            "ownership",
+            "spawnOwnership",
+            "weakReference",
+            "spawn",
+            "destroy",
+            "readonly"
+          ]
+        },
+        {
+          "method": "profilingEnabled",
+          "scalar": "false"
+        },
+        {
+          "method": "priceScale",
+          "isObj": true,
+          "keys": [
+            "_marksCache",
+            "_onMarksChanged",
+            "m_dataSources",
+            "_sourcesForAutoscale",
+            "_sourcesThatAffectVisibility",
+            "_hasSeries",
+            "_studiesCount",
+            "_drawingCount",
+            "_seriesLikeSources",
+            "_priceDataSources",
+            "_mainSource",
+            "_lastSourceRemoved",
+            "_scaleSeriesOnly",
+            "_invalidatedForRange",
+            "_priceRange",
+            "_hasCalculatedPriceRange",
+            "_logFormula",
+            "m_height",
+            "_margins",
+            "_correctedMarginsCache",
+            "_topPixelMargin",
+            "_bottomPixelMargin",
+            "_requestedTopPixelMargin",
+            "_requestedBottomPixelMargin",
+            "_clampedPixelMarginsValid",
+            "_internalHeightCache",
+            "_internalHeightChanged",
+            "_priceRangeSnapshot",
+            "_scrollStartPoint",
+            "_currencyCache"
+          ]
+        },
+        {
+          "method": "lastValueData",
+          "isObj": true,
+          "keys": [
+            "noData"
+          ]
+        },
+        {
+          "method": "isFailed",
+          "scalar": "false"
+        },
+        {
+          "method": "isLoading",
+          "scalar": "false"
+        },
+        {
+          "method": "isCompleted",
+          "scalar": "false"
+        },
+        {
+          "method": "isSymbolInvalid",
+          "scalar": "false"
+        },
+        {
+          "method": "series",
+          "isObj": true,
+          "keys": [
+            "isSeries",
+            "_isDestroyed",
+            "_hasAlert",
+            "_alertStatus",
+            "_alertCreationAvailable",
+            "_zorder",
+            "_priceScale",
+            "_ownerSource",
+            "_userEditEnabled",
+            "_priceScaleChanged",
+            "_updateAlertCreationAvailableBound",
+            "_isSelectionEnabled",
+            "_instanceId",
+            "_ownerSourceChanged",
+            "_zOrderChanged",
+            "_id",
+            "_formatterChanged",
+            "_priceStepChanged",
+            "_currencyChanged",
+            "_isCurrencyOrigin",
+            "_currencyMetaData",
+            "_unitChanged",
+            "_isUnitOrigin",
+            "_unitMetaData",
+            "_metricChanged",
+            "_priceRangeReadyChanged",
+            "_dataRangeUpdated",
+            "_priceStep",
+            "_signature",
+            "_priceRangeReady"
+          ]
+        },
+        {
+          "method": "model",
+          "isObj": true,
+          "keys": [
+            "_onRearrangePanes",
+            "_lineToolsGroupModel",
+            "_sourcesBeingMoved",
+            "_activeItemBeingMoved",
+            "_lineBeingEdited",
+            "_customSourceBeingMovedHitTestData",
+            "_customSourceBeingMoved",
+            "_dataSourceCollectionChanged",
+            "_sourceProperitesChanged",
+            "_sourceZOrderChanged",
+            "_symbolSourceResolved",
+            "_symbolSourceResolvingActive",
+            "_adjustForDividendsAvailability",
+            "_adjustForDividendsEnabled",
+            "_inactivityGapsWatchedValue",
+            "_allowedAdjustment",
+            "_currentTool",
+            "_linesBeingCreated",
+            "_lineCancelled",
+            "_phantomSourceContainer",
+            "_destroyed",
+            "_restoringState",
+            "_isSettingsExternalPosition",
+            "_isTimeScrolling",
+            "_magnet",
+            "_scrollingState",
+            "_modelIntervals",
+            "_rendererOptionsProvider",
+            "_studyInserted",
+            "_cachedStudiesMaxOffset"
+          ]
+        },
+        {
+          "method": "stateForAlert",
+          "isObj": true,
+          "keys": [
+            "id",
+            "type",
+            "title",
+            "shortTitle",
+            "shortDescription",
+            "fullId",
+            "isTVScript",
+            "hasAlertFunction",
+            "plots",
+            "inputs",
+            "alerts",
+            "scriptIdPart",
+            "scriptVersion",
+            "studyDependencies",
+            "formatter",
+            "isFundamentalStudy"
+          ]
+        },
+        {
+          "method": "stateForAlertAsync",
+          "isObj": true,
+          "keys": []
+        },
+        {
+          "method": "idForAlert",
+          "scalar": "1672868104"
+        },
+        {
+          "method": "hasBarColorer",
+          "scalar": "false"
+        },
+        {
+          "method": "isSavedInStudyTemplates",
+          "scalar": "true"
+        },
+        {
+          "method": "sourceId",
+          "scalar": "kaAYMH"
+        },
+        {
+          "method": "parentSources",
+          "isObj": true,
+          "keys": []
+        },
+        {
+          "method": "parentSourcesVW",
+          "isObj": true,
+          "keys": [
+            "_listeners",
+            "_value",
+            "_comparator"
+          ]
+        },
+        {
+          "method": "symbolSource",
+          "isObj": true,
+          "keys": [
+            "isSeries",
+            "_isDestroyed",
+            "_hasAlert",
+            "_alertStatus",
+            "_alertCreationAvailable",
+            "_zorder",
+            "_priceScale",
+            "_ownerSource",
+            "_userEditEnabled",
+            "_priceScaleChanged",
+            "_updateAlertCreationAvailableBound",
+            "_isSelectionEnabled",
+            "_instanceId",
+            "_ownerSourceChanged",
+            "_zOrderChanged",
+            "_id",
+            "_formatterChanged",
+            "_priceStepChanged",
+            "_currencyChanged",
+            "_isCurrencyOrigin",
+            "_currencyMetaData",
+            "_unitChanged",
+            "_isUnitOrigin",
+            "_unitMetaData",
+            "_metricChanged",
+            "_priceRangeReadyChanged",
+            "_dataRangeUpdated",
+            "_priceStep",
+            "_signature",
+            "_priceRangeReady"
+          ]
+        },
+        {
+          "method": "symbolSourceWV",
+          "isObj": true,
+          "keys": [
+            "subscribe",
+            "unsubscribe",
+            "value",
+            "when",
+            "ownership",
+            "spawnOwnership",
+            "weakReference",
+            "spawn",
+            "destroy",
+            "readonly"
+          ]
+        },
+        {
+          "method": "barsProvider",
+          "isObj": true,
+          "keys": [
+            "isSeries",
+            "_isDestroyed",
+            "_hasAlert",
+            "_alertStatus",
+            "_alertCreationAvailable",
+            "_zorder",
+            "_priceScale",
+            "_ownerSource",
+            "_userEditEnabled",
+            "_priceScaleChanged",
+            "_updateAlertCreationAvailableBound",
+            "_isSelectionEnabled",
+            "_instanceId",
+            "_ownerSourceChanged",
+            "_zOrderChanged",
+            "_id",
+            "_formatterChanged",
+            "_priceStepChanged",
+            "_currencyChanged",
+            "_isCurrencyOrigin",
+            "_currencyMetaData",
+            "_unitChanged",
+            "_isUnitOrigin",
+            "_unitMetaData",
+            "_metricChanged",
+            "_priceRangeReadyChanged",
+            "_dataRangeUpdated",
+            "_priceStep",
+            "_signature",
+            "_priceRangeReady"
+          ]
+        },
+        {
+          "method": "isChildStudy",
+          "scalar": "false"
+        },
+        {
+          "method": "hasChildren",
+          "scalar": "false"
+        },
+        {
+          "method": "isStarted",
+          "scalar": "false"
+        },
+        {
+          "method": "isRestarting",
+          "scalar": "true"
+        },
+        {
+          "method": "isActualInterval",
+          "scalar": "true"
+        },
+        {
+          "method": "onIsActualIntervalChange",
+          "isObj": true,
+          "keys": [
+            "fire",
+            "_listeners"
+          ]
+        },
+        {
+          "method": "isVisible",
+          "scalar": "true"
+        },
+        {
+          "method": "start",
+          "isObj": true,
+          "keys": []
+        },
+        {
+          "method": "inputs",
+          "isObj": true,
+          "keys": [
+            "text",
+            "pineId",
+            "pineVersion",
+            "pineFeatures",
+            "in_0",
+            "in_1",
+            "in_2",
+            "in_3",
+            "in_4",
+            "in_5",
+            "in_6",
+            "in_7",
+            "in_8",
+            "in_9",
+            "in_10",
+            "in_11",
+            "in_12",
+            "in_13",
+            "in_14",
+            "in_15",
+            "in_16",
+            "in_17",
+            "in_18",
+            "in_19",
+            "in_20",
+            "in_21",
+            "in_22",
+            "in_23",
+            "in_24",
+            "in_25"
+          ]
+        },
+        {
+          "method": "data",
+          "isObj": true,
+          "keys": [
+            "_items",
+            "_start",
+            "_end",
+            "_shareRead",
+            "_minMaxCache",
+            "_rowSearchCacheByIndex",
+            "_rowSearchCacheByIndexWithoutEmptyValues",
+            "_rowSearchCacheByTime",
+            "_rowSearchCacheByTimeWithoutEmptyValues",
+            "_plotFunctions",
+            "_emptyValuePredicate"
+          ]
+        },
+        {
+          "method": "plots",
+          "isObj": true,
+          "keys": [
+            "_items",
+            "_start",
+            "_end",
+            "_shareRead",
+            "_minMaxCache",
+            "_rowSearchCacheByIndex",
+            "_rowSearchCacheByIndexWithoutEmptyValues",
+            "_rowSearchCacheByTime",
+            "_rowSearchCacheByTimeWithoutEmptyValues",
+            "_plotFunctions",
+            "_emptyValuePredicate"
+          ]
+        },
+        {
+          "method": "metaInfo",
+          "isObj": true,
+          "keys": [
+            "_forceOverlayPlotIds",
+            "palettes",
+            "inputs",
+            "plots",
+            "graphics",
+            "defaults",
+            "_metainfoVersion",
+            "behind_chart",
+            "description",
+            "docs",
+            "format",
+            "historyCalculationMayChange",
+            "id",
+            "isTVScript",
+            "isTVScriptStrategy",
+            "isTVScriptStub",
+            "is_hidden_study",
+            "is_price_study",
+            "pine",
+            "scriptIdPart",
+            "shortDescription",
+            "stats",
+            "styles",
+            "usesPrivateLib",
+            "warnings",
+            "shortId",
+            "packageId",
+            "version",
+            "fullId",
+            "productId"
+          ]
+        },
+        {
+          "method": "originalMetaInfo",
+          "isObj": true,
+          "keys": [
+            "_forceOverlayPlotIds",
+            "palettes",
+            "inputs",
+            "plots",
+            "graphics",
+            "defaults",
+            "_metainfoVersion",
+            "behind_chart",
+            "description",
+            "docs",
+            "format",
+            "historyCalculationMayChange",
+            "id",
+            "isTVScript",
+            "isTVScriptStrategy",
+            "isTVScriptStub",
+            "is_hidden_study",
+            "is_price_study",
+            "pine",
+            "scriptIdPart",
+            "shortDescription",
+            "stats",
+            "styles",
+            "usesPrivateLib",
+            "warnings",
+            "shortId",
+            "packageId",
+            "version",
+            "fullId",
+            "productId"
+          ]
+        },
+        {
+          "method": "status",
+          "isObj": true,
+          "keys": [
+            "type"
+          ]
+        },
+        {
+          "method": "statusWV",
+          "isObj": true,
+          "keys": [
+            "subscribe",
+            "unsubscribe",
+            "value",
+            "when",
+            "ownership",
+            "spawnOwnership",
+            "weakReference",
+            "spawn",
+            "destroy",
+            "readonly"
+          ]
+        },
+        {
+          "method": "name",
+          "scalar": "FINAL OPTIMIZED \u2014 Single RSI 14, 5-Bar Pivots, W200, 2.8R/3."
+        },
+        {
+          "method": "title",
+          "scalar": "FINAL_BASELINE (14, 2.8, 1.5, 20, 5, 5, 5, 60, 2, 15, true, "
+        },
+        {
+          "method": "titleInParts",
+          "isArray": true,
+          "len": 2,
+          "sample": "\"FINAL_BASELINE\""
+        },
+        {
+          "method": "inputsInParts",
+          "isArray": true,
+          "len": 14,
+          "sample": "{\"title\":\"RSI Length\",\"value\":\"14\"}"
+        },
+        {
+          "method": "graphics",
+          "isObj": true,
+          "keys": [
+            "_indexes",
+            "_hhistsByTimePointIndex",
+            "_primitivesCollection"
+          ]
+        },
+        {
+          "method": "graphicsInfo",
+          "isObj": true,
+          "keys": [
+            "dwgtablecells",
+            "dwgtables"
+          ]
+        },
+        {
+          "method": "firstValue",
+          "scalar": "276.55"
+        },
+        {
+          "method": "tags",
+          "isObj": true,
+          "keys": []
+        },
+        {
+          "method": "copiable",
+          "scalar": "true"
+        },
+        {
+          "method": "formatter",
+          "isObj": true,
+          "keys": [
+            "type",
+            "_priceScale",
+            "_minMove",
+            "_minMove2",
+            "_fractional",
+            "_variableMinTick",
+            "_ignoreMinMove",
+            "_fractionalLength",
+            "_ignoreLocaleNumberFormat",
+            "_noExponentialForm",
+            "_implementation"
+          ]
+        },
+        {
+          "method": "defaultFormatter",
+          "isObj": true,
+          "keys": [
+            "type",
+            "_priceScale",
+            "_minMove",
+            "_minMove2",
+            "_fractional",
+            "_variableMinTick",
+            "_ignoreMinMove",
+            "_fractionalLength",
+            "_ignoreLocaleNumberFormat",
+            "_noExponentialForm",
+            "_implementation"
+          ]
+        },
+        {
+          "method": "plotFormatter",
+          "isObj": true,
+          "keys": [
+            "type",
+            "_priceScale",
+            "_minMove",
+            "_minMove2",
+            "_fractional",
+            "_variableMinTick",
+            "_ignoreMinMove",
+            "_fractionalLength",
+            "_ignoreLocaleNumberFormat",
+            "_noExponentialForm",
+            "_implementation"
+          ]
+        },
+        {
+          "method": "isMultiPaneAvailable",
+          "scalar": "true"
+        },
+        {
+          "method": "isMultiPaneEnabled",
+          "scalar": "false"
+        },
+        {
+          "method": "studyName",
+          "isObj": true,
+          "keys": [
+            "subscribe",
+            "unsubscribe",
+            "value",
+            "when",
+            "ownership",
+            "spawnOwnership",
+            "weakReference",
+            "spawn",
+            "destroy",
+            "readonly"
+          ]
+        },
+        {
+          "method": "getMinFirstBarIndexForPlot",
+          "scalar": "-Infinity"
+        },
+        {
+          "method": "guiPlotName",
+          "scalar": "FINAL_BASELINE (14, 2.8, 1.5, 20, 5, 5, 5, 60, 2, 15, true, "
+        },
+        {
+          "method": "childStudyByRebind",
+          "isObj": true,
+          "keys": [
+            "fire",
+            "_listeners"
+          ]
+        },
+        {
+          "method": "isPine",
+          "scalar": "true"
+        },
+        {
+          "method": "isStandardPine",
+          "scalar": "false"
+        },
+        {
+          "method": "isLinkedToSeries",
+          "scalar": "false"
+        },
+        {
+          "method": "defaultPlotIdForAlert",
+          "scalar": "plot_0"
+        },
+        {
+          "method": "hasPendingUnresolvedSymbols",
+          "scalar": "false"
+        },
+        {
+          "method": "hasSymbolInputs",
+          "scalar": "false"
+        },
+        {
+          "method": "currencyOriginSource",
+          "isObj": true,
+          "keys": [
+            "subscribe",
+            "unsubscribe",
+            "value",
+            "when",
+            "ownership",
+            "spawnOwnership",
+            "weakReference",
+            "spawn",
+            "destroy",
+            "readonly"
+          ]
+        },
+        {
+          "method": "unitOriginSource",
+          "isObj": true,
+          "keys": [
+            "subscribe",
+            "unsubscribe",
+            "value",
+            "when",
+            "ownership",
+            "spawnOwnership",
+            "weakReference",
+            "spawn",
+            "destroy",
+            "readonly"
+          ]
+        },
+        {
+          "method": "canOverrideMinTick",
+          "scalar": "false"
+        },
+        {
+          "method": "dataWindowView",
+          "isObj": true,
+          "keys": [
+            "_items",
+            "_header",
+            "_title",
+            "_invalidated",
+            "_study",
+            "_model",
+            "_valueProvider"
+          ]
+        },
+        {
+          "method": "statusView",
+          "isObj": true,
+          "keys": [
+            "_text",
+            "_color",
+            "_size",
+            "_bold",
+            "_statusProvider"
+          ]
+        },
+        {
+          "method": "legendView",
+          "isObj": true,
+          "keys": [
+            "_items",
+            "_header",
+            "_title",
+            "_invalidated",
+            "_study",
+            "_model",
+            "_valueProvider",
+            "_showStudyValues"
+          ]
+        }
+      ],
+      "titles": [
+        "BATS:SPY, 1D",
+        "Ideas on chart",
+        "Dividends",
+        "Splits",
+        "Earnings",
+        "RollDatesCalculator (now)",
+        "FuturesContractExpiration",
+        "LatestUpdatesSource",
+        "Chart Events",
+        "FINAL_BASELINE (14, 2.8, 1.5, 20, 5, 5, 5, 60, 2, 15, true, true, false, true, false)"
+      ]
+    },
+    "raw_report_text": "FINAL_BASELINE\nJan 29, 1993 \u2014 Sep 9, 2026\n100\u202fK\u00a0USD\nDefault detalization\nScript execution\n1\n\nKey stats\n\nTotal PnL\n+18,925.11USD+18.93%\nMax drawdown\n7,865.85USD6.89%\nProfitable trades\n63.64%21/33\nProfit factor\n2.091\nPerformance\nCumulative PnL\nBuy and hold\nTrades excursions\nRun-ups and drawdowns\n\t\n\t\n\n\t\n\t\n\nPerformance analysis\n\nBreakdown\nPeriodical\nBenchmarking\nMargin usage\nGrowth and decline\nMore\nGross profit\n36,269.48USD36.27%\nGross loss\n17,344.37USD17.34%\nProfit factor\n2.091\nCommission load\nProfits and losses\nBy signals\nBy side\nAll signals\n+18,925.11\nUSD\nEnter Long\n+18,925.11\nUSD\n\nTrades analysis\n\nDistribution\nStreaks\nTime patterns\nMore\nExpectancy\n573.49USD1.03%\nOutliers PnL\n2,118.66USD2.12%\nLargest profit\nLargest loss\nReturns distribution\n\t\n\t\n\n\t\n\t\nLosers\nWinners\nAverage loss\n\u22123.21%\nAverage profit\n3.13%\nTrades distribution\n33\nTotal trades\nWinners\n21 trades\n63.64%\nLosers\n12 trades\n36.36%\nBreakevens\n0 trades\n0.00%"
+  },
+  "QQQ_1D_IS_BASE": {
+    "phase": "QQQ_1D_IS_BASE",
+    "status": "unstable",
+    "symbol": "BATS:QQQ"
+  },
+  "BTCUSD_1D_IS_BASE": {
+    "phase": "BTCUSD_1D_IS_BASE",
+    "status": "unstable",
+    "symbol": "BITSTAMP:BTCUSD"
+  },
+  "SPY_1D_OOS_BASE": {
+    "phase": "SPY_1D_OOS_BASE",
+    "status": "unstable",
+    "symbol": "BATS:SPY"
+  },
+  "QQQ_1D_OOS_BASE": {
+    "phase": "QQQ_1D_OOS_BASE",
+    "status": "unstable",
+    "symbol": "BATS:QQQ"
+  },
+  "BTCUSD_1D_OOS_BASE": {
+    "phase": "BTCUSD_1D_OOS_BASE",
+    "status": "unstable",
+    "symbol": "BITSTAMP:BTCUSD"
+  },
+  "SPY_1D_IS_NOFED": {
+    "symbol": "BATS:SPY",
+    "interval": "1D",
+    "total_pnl_usd": 18925.11,
+    "gross_profit": 36269.48,
+    "gross_loss": 17344.37,
+    "profit_factor": 2.091,
+    "max_drawdown_pct": 6.89,
+    "win_rate_pct": 63.64,
+    "winning_trades": 21,
+    "total_closed_trades": 33,
+    "status": "ok",
+    "pf_crosscheck_ok": true,
+    "phase": "SPY_1D_IS_NOFED",
+    "elapsed_sec": 9.2,
+    "raw_report_text": "FINAL_BASELINE\nJan 29, 1993 \u2014 Sep 9, 2026\n100\u202fK\u00a0USD\nDefault detalization\nScript execution\n1\n\nKey stats\n\nTotal PnL\n+18,925.11USD+18.93%\nMax drawdown\n7,865.85USD6.89%\nProfitable trades\n63.64%21/33\nProfit factor\n2.091\nPerformance\nCumulative PnL\nBuy and hold\nTrades excursions\nRun-ups and drawdowns\n\t\n\t\n\n\t\n\t\n\nPerformance analysis\n\nBreakdown\nPeriodical\nBenchmarking\nMargin usage\nGrowth and decline\nMore\nGross profit\n36,269.48USD36.27%\nGross loss\n17,344.37USD17.34%\nProfit factor\n2.091\nCommission load\nProfits and losses\nBy signals\nBy side\nAll signals\n+18,925.11\nUSD\nEnter Long\n+18,925.11\nUSD\n\nTrades analysis\n\nDistribution\nStreaks\nTime patterns\nMore\nExpectancy\n573.49USD1.03%\nOutliers PnL\n2,118.66USD2.12%\nLargest profit\nLargest loss\nReturns distribution\n\t\n\t\n\n\t\n\t\nLosers\nWinners\nAverage loss\n\u22123.21%\nAverage profit\n3.13%\nTrades distribution\n33\nTotal trades\nWinners\n21 trades\n63.64%\nLosers\n12 trades\n36.36%\nBreakevens\n0 trades\n0.00%"
+  },
+  "QQQ_1D_IS_NOFED": {
+    "symbol": "BATS:QQQ",
+    "interval": "1D",
+    "total_pnl_usd": 18925.11,
+    "gross_profit": 36269.48,
+    "gross_loss": 17344.37,
+    "profit_factor": 2.091,
+    "max_drawdown_pct": 6.89,
+    "win_rate_pct": 63.64,
+    "winning_trades": 21,
+    "total_closed_trades": 33,
+    "status": "ok",
+    "pf_crosscheck_ok": true,
+    "phase": "QQQ_1D_IS_NOFED",
+    "elapsed_sec": 9.1,
+    "raw_report_text": "FINAL_BASELINE\nJan 29, 1993 \u2014 Sep 9, 2026\n100\u202fK\u00a0USD\nDefault detalization\nScript execution\n1\n\nKey stats\n\nTotal PnL\n+18,925.11USD+18.93%\nMax drawdown\n7,865.85USD6.89%\nProfitable trades\n63.64%21/33\nProfit factor\n2.091\nPerformance\nCumulative PnL\nBuy and hold\nTrades excursions\nRun-ups and drawdowns\n\t\n\t\n\n\t\n\t\n\nPerformance analysis\n\nBreakdown\nPeriodical\nBenchmarking\nMargin usage\nGrowth and decline\nMore\nGross profit\n36,269.48USD36.27%\nGross loss\n17,344.37USD17.34%\nProfit factor\n2.091\nCommission load\nProfits and losses\nBy signals\nBy side\nAll signals\n+18,925.11\nUSD\nEnter Long\n+18,925.11\nUSD\n\nTrades analysis\n\nDistribution\nStreaks\nTime patterns\nMore\nExpectancy\n573.49USD1.03%\nOutliers PnL\n2,118.66USD2.12%\nLargest profit\nLargest loss\nReturns distribution\n\t\n\t\n\n\t\n\t\nLosers\nWinners\nAverage loss\n\u22123.21%\nAverage profit\n3.13%\nTrades distribution\n33\nTotal trades\nWinners\n21 trades\n63.64%\nLosers\n12 trades\n36.36%\nBreakevens\n0 trades\n0.00%"
+  },
+  "BTCUSD_1D_IS_NOFED": {
+    "symbol": "BITSTAMP:BTCUSD",
+    "interval": "1D",
+    "total_pnl_usd": 18925.11,
+    "gross_profit": 36269.48,
+    "gross_loss": 17344.37,
+    "profit_factor": 2.091,
+    "max_drawdown_pct": 6.89,
+    "win_rate_pct": 63.64,
+    "winning_trades": 21,
+    "total_closed_trades": 33,
+    "status": "ok",
+    "pf_crosscheck_ok": true,
+    "phase": "BTCUSD_1D_IS_NOFED",
+    "elapsed_sec": 9.1,
+    "raw_report_text": "FINAL_BASELINE\nJan 29, 1993 \u2014 Sep 9, 2026\n100\u202fK\u00a0USD\nDefault detalization\nScript execution\n1\n\nKey stats\n\nTotal PnL\n+18,925.11USD+18.93%\nMax drawdown\n7,865.85USD6.89%\nProfitable trades\n63.64%21/33\nProfit factor\n2.091\nPerformance\nCumulative PnL\nBuy and hold\nTrades excursions\nRun-ups and drawdowns\n\t\n\t\n\n\t\n\t\n\nPerformance analysis\n\nBreakdown\nPeriodical\nBenchmarking\nMargin usage\nGrowth and decline\nMore\nGross profit\n36,269.48USD36.27%\nGross loss\n17,344.37USD17.34%\nProfit factor\n2.091\nCommission load\nProfits and losses\nBy signals\nBy side\nAll signals\n+18,925.11\nUSD\nEnter Long\n+18,925.11\nUSD\n\nTrades analysis\n\nDistribution\nStreaks\nTime patterns\nMore\nExpectancy\n573.49USD1.03%\nOutliers PnL\n2,118.66USD2.12%\nLargest profit\nLargest loss\nReturns distribution\n\t\n\t\n\n\t\n\t\nLosers\nWinners\nAverage loss\n\u22123.21%\nAverage profit\n3.13%\nTrades distribution\n33\nTotal trades\nWinners\n21 trades\n63.64%\nLosers\n12 trades\n36.36%\nBreakevens\n0 trades\n0.00%"
+  },
+  "SPY_1D_OOS_NOFED": {
+    "symbol": "BATS:SPY",
+    "interval": "1D",
+    "total_pnl_usd": 18925.11,
+    "gross_profit": 36269.48,
+    "gross_loss": 17344.37,
+    "profit_factor": 2.091,
+    "max_drawdown_pct": 6.89,
+    "win_rate_pct": 63.64,
+    "winning_trades": 21,
+    "total_closed_trades": 33,
+    "status": "ok",
+    "pf_crosscheck_ok": true,
+    "phase": "SPY_1D_OOS_NOFED",
+    "elapsed_sec": 9.2,
+    "raw_report_text": "FINAL_BASELINE\nJan 29, 1993 \u2014 Sep 9, 2026\n100\u202fK\u00a0USD\nDefault detalization\nScript execution\n1\n\nKey stats\n\nTotal PnL\n+18,925.11USD+18.93%\nMax drawdown\n7,865.85USD6.89%\nProfitable trades\n63.64%21/33\nProfit factor\n2.091\nPerformance\nCumulative PnL\nBuy and hold\nTrades excursions\nRun-ups and drawdowns\n\t\n\t\n\n\t\n\t\n\nPerformance analysis\n\nBreakdown\nPeriodical\nBenchmarking\nMargin usage\nGrowth and decline\nMore\nGross profit\n36,269.48USD36.27%\nGross loss\n17,344.37USD17.34%\nProfit factor\n2.091\nCommission load\nProfits and losses\nBy signals\nBy side\nAll signals\n+18,925.11\nUSD\nEnter Long\n+18,925.11\nUSD\n\nTrades analysis\n\nDistribution\nStreaks\nTime patterns\nMore\nExpectancy\n573.49USD1.03%\nOutliers PnL\n2,118.66USD2.12%\nLargest profit\nLargest loss\nReturns distribution\n\t\n\t\n\n\t\n\t\nLosers\nWinners\nAverage loss\n\u22123.21%\nAverage profit\n3.13%\nTrades distribution\n33\nTotal trades\nWinners\n21 trades\n63.64%\nLosers\n12 trades\n36.36%\nBreakevens\n0 trades\n0.00%"
+  },
+  "QQQ_1D_OOS_NOFED": {
+    "symbol": "BATS:QQQ",
+    "interval": "1D",
+    "total_pnl_usd": 18925.11,
+    "gross_profit": 36269.48,
+    "gross_loss": 17344.37,
+    "profit_factor": 2.091,
+    "max_drawdown_pct": 6.89,
+    "win_rate_pct": 63.64,
+    "winning_trades": 21,
+    "total_closed_trades": 33,
+    "status": "ok",
+    "pf_crosscheck_ok": true,
+    "phase": "QQQ_1D_OOS_NOFED",
+    "elapsed_sec": 9.1,
+    "raw_report_text": "FINAL_BASELINE\nJan 29, 1993 \u2014 Sep 9, 2026\n100\u202fK\u00a0USD\nDefault detalization\nScript execution\n1\n\nKey stats\n\nTotal PnL\n+18,925.11USD+18.93%\nMax drawdown\n7,865.85USD6.89%\nProfitable trades\n63.64%21/33\nProfit factor\n2.091\nPerformance\nCumulative PnL\nBuy and hold\nTrades excursions\nRun-ups and drawdowns\n\t\n\t\n\n\t\n\t\n\nPerformance analysis\n\nBreakdown\nPeriodical\nBenchmarking\nMargin usage\nGrowth and decline\nMore\nGross profit\n36,269.48USD36.27%\nGross loss\n17,344.37USD17.34%\nProfit factor\n2.091\nCommission load\nProfits and losses\nBy signals\nBy side\nAll signals\n+18,925.11\nUSD\nEnter Long\n+18,925.11\nUSD\n\nTrades analysis\n\nDistribution\nStreaks\nTime patterns\nMore\nExpectancy\n573.49USD1.03%\nOutliers PnL\n2,118.66USD2.12%\nLargest profit\nLargest loss\nReturns distribution\n\t\n\t\n\n\t\n\t\nLosers\nWinners\nAverage loss\n\u22123.21%\nAverage profit\n3.13%\nTrades distribution\n33\nTotal trades\nWinners\n21 trades\n63.64%\nLosers\n12 trades\n36.36%\nBreakevens\n0 trades\n0.00%"
+  }
+}
