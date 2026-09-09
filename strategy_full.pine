@@ -31,7 +31,7 @@ useWeeklyFilter   = input.bool(true, "Require Macro Regime EMA Filter", group=gr
 
 group_dates = "█ Walk-Forward Date Window"
 useDateFilter       = true
-dateMode            = input.string("Out-of-Sample (2025-2026)", "Backtest Period", options=["All", "Full (2018-2026)", "In-Sample (2018-2024)", "Out-of-Sample (2025-2026)"], group=group_dates)
+dateMode            = input.string("Full (2018-2026)", "Backtest Period", options=["All", "Full (2018-2026)", "In-Sample (2018-2024)", "Out-of-Sample (2025-2026)"], group=group_dates)
 
 group_ui = "█ Visual & HUD"
 showExecutionLines = input.bool(false, "Show Stop/Target Lines", group=group_ui)
@@ -44,7 +44,7 @@ outSampleStart = timestamp(2025, 1, 1, 0, 0)
 outSampleEnd   = math.min(timestamp(2026, 12, 31, 23, 59), timenow)
 
 // GENERATE-IS-START
-bool inTradeWindow = (time >= outSampleStart and time <= outSampleEnd)
+bool inTradeWindow = (time >= inSampleStart and time <= outSampleEnd)
 // GENERATE-IS-END
 
 // ─── 3. RESOLUTION & ASSET DETECTION ─────────────────────────────────────────

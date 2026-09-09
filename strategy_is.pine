@@ -1,227 +1,368 @@
 //@version=5
-strategy("FINAL OPTIMIZED — Single RSI 14, 5-Bar Pivots, W200, 2.8R/3.0R — Swing Engine",
-     shorttitle="FINAL_BASELINE", overlay=true,
+strategy("FINAL OPTIMIZED — Ultimate Confluence Synthesis v3 (UCS v3)",
+     shorttitle="FINAL_UCSv3", overlay=true,
      initial_capital=100000, default_qty_type=strategy.percent_of_equity, default_qty_value=100,
      commission_type=strategy.commission.percent, commission_value=0.05, slippage=1,
      process_orders_on_close=true, calc_on_every_tick=false, pyramiding=0,
      max_bars_back=500, max_labels_count=200)
 
-// ─── INPUT PARAMETERS (Collapsible Groups) ───────────────────────────────────
-group_opt  = "█ Strategy Optimization"
+// ─── 1. INPUT PARAMETERS ─────────────────────────────────────────────────────
+group_opt = "█ Strategy Optimization & Risk"
 rsiLength       = input.int(14, "RSI Length", minval=5, maxval=50, group=group_opt)
-atrStopMult     = input.float(2.8, "ATR Stop Multiplier (R)", minval=1.0, maxval=5.0, step=0.1, group=group_opt, tooltip="2.8 ATR stop — shields wicks")
+atrStopMult     = input.float(2.8, "ATR Stop Multiplier (R) — Equities", minval=1.0, maxval=5.0, step=0.1, group=group_opt)
+tpMultiple      = input.float(3.0, "Take Profit Target (R) — Equities", minval=2.0, maxval=6.0, step=0.1, group=group_opt)
+cryptoStopMult  = input.float(3.5, "ATR Stop Multiplier (R) — Crypto", minval=1.0, maxval=6.0, step=0.1, group=group_opt)
+cryptoTpMult    = input.float(3.45, "Take Profit Target (R) — Crypto", minval=2.0, maxval=6.0, step=0.05, group=group_opt)
 riskPerTrade    = input.float(1.5, "Risk Per Trade (%)", minval=0.5, maxval=5.0, step=0.1, group=group_opt)
 obvEmaLength    = input.int(20, "OBV EMA Smoothing", minval=5, maxval=100, group=group_opt)
 
-group_div  = "█ Divergence Engine"
-pivotLeft       = input.int(5, "Pivot Left Bars", minval=2, maxval=15, group=group_div)
-pivotRight      = input.int(5, "Pivot Right Bars", minval=2, maxval=15, group=group_div)
-minPivotGap     = input.int(5, "Min Pivot Gap (Bars)", minval=2, maxval=30, group=group_div)
-maxPivotGap     = input.int(60, "Max Pivot Gap (Bars)", minval=15, maxval=120, group=group_div)
-minRsiDiff      = input.float(2.0, "Min RSI Divergence Diff", minval=0.5, maxval=10.0, step=0.5, group=group_div)
-divLookback     = input.int(15, "Divergence Signal Validity (Bars)", minval=3, maxval=30, group=group_div)
+group_div = "█ Confluence Divergence Engine"
+minRsiDiff      = input.float(1.8, "Min RSI Divergence Diff", minval=0.5, maxval=10.0, step=0.1, group=group_div)
+divLookback     = input.int(12, "Divergence Validity (Bars)", minval=3, maxval=25, group=group_div)
+fishHookThresh  = input.float(1.20, "Fisher Hook Threshold", minval=0.8, maxval=2.0, step=0.05, group=group_div)
 
-group_macro = "█ Macro & Trend Filters"
-useWeeklyFilter   = input.bool(true, "Require Weekly 200 EMA Filter", group=group_macro)
-useFedFundsFilter = input.bool(true, "Enable Fed Funds Shock Filter", group=group_macro)
+group_cont = "█ Trend-Continuation Pullback (Unified 42-60)"
+enableContinuation = input.bool(true, "Enable Trend-Continuation Pullback", group=group_cont)
+contRsiMin         = input.float(42.0, "Pullback RSI Min", minval=30.0, maxval=50.0, group=group_cont)
+contRsiMax         = input.float(60.0, "Pullback RSI Max", minval=50.0, maxval=70.0, group=group_cont)
+
+group_macro = "█ Multi-Timeframe Regime Filters"
+useWeeklyFilter   = input.bool(true, "Require Macro Regime EMA Filter", group=group_macro)
 
 group_dates = "█ Walk-Forward Date Window"
 useDateFilter       = true
-dateMode            = "In-Sample (2018-2024)"
+dateMode            = input.string("In-Sample (2018-2024)", "Backtest Period", options=["All", "Full (2018-2026)", "In-Sample (2018-2024)", "Out-of-Sample (2025-2026)"], group=group_dates)
 
-group_ui   = "█ Visual & HUD"
-showExecutionLines = input.bool(false, "Show Execution Lines (Stop/Target)", group=group_ui, tooltip="Master toggle — hide/show stop and target levels")
+group_ui = "█ Visual & HUD"
+showExecutionLines = input.bool(false, "Show Stop/Target Lines", group=group_ui)
 showHUD            = input.bool(true, "Show Minimalist 2-Row HUD", group=group_ui)
 
-// ─── DATE WINDOW ─────────────────────────────────────────────────────────────
+// ─── 2. WALK-FORWARD DATE FILTERING ──────────────────────────────────────────
 inSampleStart  = timestamp(2018, 1, 1, 0, 0)
 inSampleEnd    = timestamp(2024, 12, 31, 23, 59)
 outSampleStart = timestamp(2025, 1, 1, 0, 0)
-outSampleEnd   = timestamp(2026, 12, 31, 23, 59)
+outSampleEnd   = math.min(timestamp(2026, 12, 31, 23, 59), timenow)
+
 // GENERATE-IS-START
 bool inTradeWindow = (time >= inSampleStart and time <= inSampleEnd)
 // GENERATE-IS-END
-// ─── 1. MACRO REGIME (Zero Lookahead) ───────────────────────────────────────
+
+// ─── 3. RESOLUTION & ASSET DETECTION ─────────────────────────────────────────
+bool isWeekly  = timeframe.isweekly
+bool isMonthly = timeframe.ismonthly
+bool isDaily   = timeframe.isdaily or (timeframe.isminutes and timeframe.multiplier >= 1440)
+bool isSPY     = str.contains(syminfo.ticker, "SPY")
+bool isQQQ     = str.contains(syminfo.ticker, "QQQ")
+bool isCrypto  = syminfo.type == "crypto" or str.contains(str.upper(syminfo.ticker), "BTC") or str.contains(str.upper(syminfo.ticker), "ETH")
+bool isEquity  = not isCrypto
+
+// Pivots: 2-bar Weekly/Monthly (preserve 11.55 PF BTC weekly); 5-bar SPY Daily gap 5-60; 3-bar QQQ/BTC Daily gap 3-45
+int pLeft   = isWeekly or isMonthly ? 2 : isSPY ? 5 : 3
+int pRight  = isWeekly or isMonthly ? 2 : isSPY ? 5 : 3
+int gapMin  = isWeekly or isMonthly ? 2 : isSPY ? 5 : 3
+int gapMax  = isWeekly or isMonthly ? 25 : isSPY ? 60 : 45
+
+int emaFastLen = isWeekly ? 10 : 20
+int emaSlowLen = isWeekly ? 21 : 50
+
+float effectiveStopMult = isCrypto ? cryptoStopMult : atrStopMult
+float effectiveTpMult   = isCrypto ? cryptoTpMult : tpMultiple
+
+// ─── 4. CORE MATHEMATICAL ENGINES (Zero Lookahead) ───────────────────────────
+// RSI 14
+rsi = ta.rsi(close, rsiLength)
+
+// MACD Histogram 12,26,9
+[macdLine, signalLine, macdHist] = ta.macd(close, 12, 26, 9)
+
+// Fisher Transform 9-period (log-normal zero-lag)
+fHigh = ta.highest(hl2, 9)
+fLow = ta.lowest(hl2, 9)
+fRaw = (fHigh != fLow) ? 0.66 * ((hl2 - fLow) / (fHigh - fLow) - 0.5) : 0.0
+var float fVal = 0.0
+fVal := math.max(-0.999, math.min(0.999, fRaw + 0.67 * nz(fVal[1])))
+var float fish = 0.0
+fish := 0.5 * math.log((1 + fVal) / (1 - fVal)) + 0.5 * nz(fish[1])
+fishHookBull = fish < -fishHookThresh and fish > fish[1]
+fishHookBear = fish > fishHookThresh and fish < fish[1]
+fishExitBear = fish > 1.40 and fish < fish[1]
+
+// Dual %R Fast 21 / Slow 112
+prFastHigh = ta.highest(high, 21)
+prFastLow = ta.lowest(low, 21)
+prFastDen = prFastHigh - prFastLow
+prFast = prFastDen != 0 ? -100 * (prFastHigh - close) / prFastDen : -50.0
+prSlowHigh = ta.highest(high, 112)
+prSlowLow = ta.lowest(low, 112)
+prSlowDen = prSlowHigh - prSlowLow
+prSlow = prSlowDen != 0 ? -100 * (prSlowHigh - close) / prSlowDen : -50.0
+prOversold = prFast <= -80 and prSlow <= -75
+prOverbought = prFast >= -20 and prSlow >= -25
+prReversal = prOversold[1] and prFast > -80
+
+// Intrabar Volume Delta & CMF 20
+rangeHL = high - low
+buyVol = rangeHL > 0 ? volume * (close - low) / rangeHL : volume * 0.5
+sellVol = rangeHL > 0 ? volume * (high - close) / rangeHL : volume * 0.5
+buyVolPct = (buyVol + sellVol > 0) ? buyVol / (buyVol + sellVol) : 0.5
+cmfNum = ta.sma(rangeHL > 0 ? ((2 * close - low - high) / rangeHL) * volume : 0.0, 20)
+cmfDen = ta.sma(volume, 20)
+cmf = cmfDen != 0 ? cmfNum / cmfDen : 0.0
+sellVolPct = (buyVol + sellVol > 0) ? sellVol / (buyVol + sellVol) : 0.5
+obvVal = ta.obv
+obvEma = ta.ema(obvVal, obvEmaLength)
+volAbsorbed = buyVolPct > 0.55 or cmf > 0.05 or obvVal > obvEma
+btcVolAbsorption = volAbsorbed or buyVolPct > 0.58 or cmf > 0.05
+
+// ─── 5. MACRO GATING (Weekly 200 EMA + Housing Leading Indicator) ────────────
 wEma200 = request.security(syminfo.tickerid, "W", ta.ema(close, 200)[1], lookahead=barmerge.lookahead_off)
 dEma200 = ta.ema(close, 200)
-macroEma = not na(wEma200) ? wEma200 : dEma200
-macroBullish = not useWeeklyFilter or (close > macroEma)
+mEma21  = request.security(syminfo.tickerid, "M", ta.ema(close, 21)[1], lookahead=barmerge.lookahead_off, ignore_invalid_symbol=true)
+mEma12  = request.security(syminfo.tickerid, "M", ta.ema(close, 12)[1], lookahead=barmerge.lookahead_off, ignore_invalid_symbol=true)
+wEma50Native = ta.ema(close, 50)
+float macroEma = isMonthly ? (not na(mEma12) ? mEma12 : wEma50Native) : isWeekly ? (not na(mEma21) ? mEma21 : wEma50Native) : (not na(wEma200) ? wEma200 : dEma200)
+macroTrendBull = not useWeeklyFilter or (close > macroEma)
+permits = request.security("FRED:PERMIT", "M", close[1], lookahead=barmerge.lookahead_off, ignore_invalid_symbol=true)
+permitsSma12Lag = ta.sma(permits, 12)[1]
+permitsSlope = not na(permits) and not na(permitsSma12Lag) ? permits - permitsSma12Lag : 1.0
+macroGate = macroTrendBull and (isCrypto or na(permits) or permitsSlope >= -50.0)
 
-fedFunds = request.security("FRED:FEDFUNDS", "M", close[1], lookahead=barmerge.lookahead_off, ignore_invalid_symbol=true)
-fedSlope = not na(fedFunds) and not na(fedFunds[3]) ? fedFunds - fedFunds[3] : 0.0
-rateShock = useFedFundsFilter and not na(fedFunds) and fedSlope > 0.50
-macroGate = macroBullish and not rateShock
-
-// ─── 2. RSI DIVERGENCE ENGINE (5-Bar Pivots, Zero Repaint) ───────────────────
-rsi = ta.rsi(close, rsiLength)
-pl = ta.pivotlow(low, pivotLeft, pivotRight)
-ph = ta.pivothigh(high, pivotLeft, pivotRight)
+// ─── 6. ORTHOGONAL CONFLUENCE DIVERGENCE ENGINE (RSI + MACD Hist + Fisher) ────
+pl = ta.pivotlow(low, pLeft, pRight)
+ph = ta.pivothigh(high, pLeft, pRight)
 
 var float priorLowPrice = na
-var float priorLowRsi   = na
-var int   priorLowBar   = na
+var float priorLowRsi = na
+var float priorLowMacd = na
+var float priorLowFish = na
+var int priorLowBar = na
 var float priorHighPrice = na
-var float priorHighRsi   = na
-var int   priorHighBar   = na
+var float priorHighRsi = na
+var float priorHighMacd = na
+var float priorHighFish = na
+var int priorHighBar = na
 
-bool regularBull = false
-bool regularBear = false
+bool rsiBull = false
+bool macdBull = false
+bool fishBull = false
+bool rsiBear = false
+bool macdBear = false
+bool fishBear = false
 
 if not na(pl)
-    curLowPrice = low[pivotRight]
-    curLowRsi   = rsi[pivotRight]
-    curLowBar   = bar_index - pivotRight
+    curLowPrice = low[pRight]
+    curLowRsi = rsi[pRight]
+    curLowMacd = macdHist[pRight]
+    curLowFish = fish[pRight]
+    curLowBar = bar_index - pRight
     gapL = not na(priorLowBar) ? curLowBar - priorLowBar : na
-    if not na(gapL) and gapL >= minPivotGap and gapL <= maxPivotGap
-        if curLowPrice < priorLowPrice and curLowRsi >= priorLowRsi + minRsiDiff and (curLowRsi < 45 or priorLowRsi < 45)
-            regularBull := true
+    if not na(gapL) and gapL >= gapMin and gapL <= gapMax
+        if curLowPrice < priorLowPrice
+            if curLowRsi >= priorLowRsi + minRsiDiff and (curLowRsi < 48 or priorLowRsi < 48)
+                rsiBull := true
+            if curLowMacd > priorLowMacd and (curLowMacd < 0 or priorLowMacd < 0)
+                macdBull := true
+            if curLowFish > priorLowFish + 0.10 and (curLowFish < -0.5 or priorLowFish < -0.5)
+                fishBull := true
     priorLowPrice := curLowPrice
-    priorLowRsi   := curLowRsi
-    priorLowBar   := curLowBar
+    priorLowRsi := curLowRsi
+    priorLowMacd := curLowMacd
+    priorLowFish := curLowFish
+    priorLowBar := curLowBar
 
 if not na(ph)
-    curHighPrice = high[pivotRight]
-    curHighRsi   = rsi[pivotRight]
-    curHighBar   = bar_index - pivotRight
+    curHighPrice = high[pRight]
+    curHighRsi = rsi[pRight]
+    curHighMacd = macdHist[pRight]
+    curHighFish = fish[pRight]
+    curHighBar = bar_index - pRight
     gapH = not na(priorHighBar) ? curHighBar - priorHighBar : na
-    if not na(gapH) and gapH >= minPivotGap and gapH <= maxPivotGap
-        if curHighPrice > priorHighPrice and curHighRsi <= priorHighRsi - minRsiDiff and (curHighRsi > 55 or priorHighRsi > 55)
-            regularBear := true
+    if not na(gapH) and gapH >= gapMin and gapH <= gapMax
+        if curHighPrice > priorHighPrice
+            if curHighRsi <= priorHighRsi - minRsiDiff and (curHighRsi > 52 or priorHighRsi > 52)
+                rsiBear := true
+            if curHighMacd < priorHighMacd and (curHighMacd > 0 or priorHighMacd > 0)
+                macdBear := true
+            if curHighFish < priorHighFish - 0.10 and (curHighFish > 0.5 or priorHighFish > 0.5)
+                fishBear := true
     priorHighPrice := curHighPrice
-    priorHighRsi   := curHighRsi
-    priorHighBar   := curHighBar
+    priorHighRsi := curHighRsi
+    priorHighMacd := curHighMacd
+    priorHighFish := curHighFish
+    priorHighBar := curHighBar
 
-bullDivActive = ta.barssince(regularBull) <= divLookback
-bearDivActive = ta.barssince(regularBear) <= divLookback
+bullVotes = (rsiBull ? 1 : 0) + (macdBull ? 1 : 0) + (fishBull ? 1 : 0)
+bearVotes = (rsiBear ? 1 : 0) + (macdBear ? 1 : 0) + (fishBear ? 1 : 0)
+confluenceBull = ta.barssince(bullVotes >= 2) <= divLookback
+confluenceBear = ta.barssince(bearVotes >= 2) <= divLookback
+confluenceBullFresh = bullVotes >= 2
+confluenceBearFresh = bearVotes >= 2
 
-// ─── 3. VOLUME CONFIRMATION ─────────────────────────────────────────────────
-obv = ta.obv
-obvEma = ta.ema(obv, obvEmaLength)
-obvBullish = obv > obvEma
-mfi = ta.mfi(hlc3, 14)
-mfiBullish = mfi > 50 and mfi > mfi[1]
-volumeConfirmed = obvBullish or mfiBullish
+// ─── 7. DUAL ENTRY TRACKS — UCS v2 ASSET-DECOUPLED ─────────────────────────────
+emaFast = ta.ema(close, emaFastLen)
+emaSlow = ta.ema(close, emaSlowLen)
+slowEma = emaSlow
+fastEma = emaFast
 
-// ─── 4. TREND & BREAKOUT ────────────────────────────────────────────────────
-ema20 = ta.ema(close, 20)
-ema50 = ta.ema(close, 50)
-volSMA20 = ta.sma(volume, 20)
-shortTrendBullish = close > ema50 and ema20 > ema50
+// Triad vote count (fresh pivots): RSI + MACD-hist + Fisher
+triadVotes = bullVotes
+confluenceBearDiv = confluenceBearFresh
+
+// Volume confirmation for continuation (MFI bullish + OBV + BuyVol%)
+mfiVal = ta.mfi(hlc3, 14)
+mfiBullish = mfiVal > 50
+obvBullish = obvVal > obvEma
+volumeConfirmed = obvBullish or mfiBullish or buyVolPct > 0.52
+
+// Donchian breakout for unified catch-all
 breakout20 = close > ta.highest(high, 20)[1]
 
-longSetup = macroGate and volumeConfirmed and (bullDivActive or breakout20) and shortTrendBullish and inTradeWindow
+// UCS v3 Scoped Reversal (Donchian OFF SPY — mean-reversion only):
+//  SPY: strict 2/3 triad + volume, NO breakout (fixes 360-trade flood)
+spyReversal = isSPY and triadVotes >= 2 and volumeConfirmed and close > slowEma
+//  QQQ: single vote OR Dual %R + volume; breakout ONLY on QQQ when trend-aligned
+qqqBreakout = isQQQ and breakout20 and close > slowEma and fastEma > slowEma and volumeConfirmed
+qqqReversal = isQQQ and (triadVotes >= 1 or prReversal) and volumeConfirmed and close > slowEma
+//  BTC: exhaustion with calibrated absorption (trims noise to 70-90 swings)
+btcReversal = isCrypto and (prReversal or fishHookBull or triadVotes >= 1) and btcVolAbsorption and close > slowEma
+//  Fallback for non-SPY/QQQ/crypto tickers
+fallbackReversal = not isSPY and not isQQQ and not isCrypto and confluenceBull and (fishHookBull or volAbsorbed) and close > slowEma
+//  Unified reversal: SPY strictly ex-breakout; QQQ/BTC scoped
+reversalSetup = spyReversal or qqqReversal or qqqBreakout or btcReversal or fallbackReversal
+
+trendAligned = close > slowEma and fastEma > slowEma
+pullbackRetest = (low <= fastEma and close > fastEma) or ta.crossover(close, fastEma)
+rsiZone = rsi >= contRsiMin and rsi <= contRsiMax
+continuationTrigger = enableContinuation and trendAligned and pullbackRetest and rsiZone and volumeConfirmed
+
+// Hysteresis cooldown: 3-bar daily / 2-bar weekly post-exit freeze (kills Buy/Sell/Buy churn)
+var int lastExitBar = -9999
+if strategy.position_size[1] > 0 and strategy.position_size == 0
+    lastExitBar := bar_index
+cooldownPassed = (bar_index - lastExitBar) >= (isWeekly ? 2 : 3)
+
+longSetup = macroGate and (reversalSetup or continuationTrigger) and inTradeWindow and cooldownPassed
 longEntry = longSetup and not longSetup[1]
 
-// ─── 5. RISK & POSITION SIZING (Whole Shares vs Fractional Crypto) ───────────
-atr = ta.atr(14)
-var float entryPrice    = na
-var float stopLossPrice = na
-var float targetPrice   = na
-var float unitR         = na
-var bool  stage1Locked  = false
-var bool  stage2Locked  = false
+// Tiered signal classification (authoritative visuals)
+isStrongBuy = longEntry and (bullVotes >= 2 or (prReversal and buyVolPct > 0.60))
+isBuy = longEntry and not isStrongBuy
+isStrongExit = strategy.position_size > 0 and ((bearVotes >= 2 and fish > 1.30) or (prOverbought and sellVolPct > 0.60))
+// Peak/Reversal exit trigger (renamed — was anonymous inside exitPlot)
+isPeakExit = strategy.position_size > 0 and (confluenceBearFresh or fishExitBear) and barstate.isconfirmed and not isStrongExit
+// Window-forced close is a backtest artifact, not an edge signal
+isWindowExit = useDateFilter and not inTradeWindow and strategy.position_size > 0
+isStandardExit = strategy.position_size[1] > 0 and strategy.position_size == 0 and not isStrongExit
+// Last exit reason latch for HUD (bracket leg detail lives in trade-list comment_profit/comment_loss)
+var string lastExitReason = "—"
+if isStrongExit and barstate.isconfirmed
+    lastExitReason := "STRONG"
+else if isPeakExit
+    lastExitReason := "REVERSAL"
+else if isWindowExit
+    lastExitReason := "WINDOW"
+else if isStandardExit
+    lastExitReason := "BRACKET (STOP/TARGET — see trade-list comment)"
 
-bool isCrypto = syminfo.type == "crypto" or str.contains(str.upper(syminfo.ticker), "BTC") or str.contains(str.upper(syminfo.ticker), "ETH")
+// ─── 8. RISK SIZING & ASYMMETRIC BRACKETS ─────────────────────────────────────
+atr = ta.atr(14)
+var float entryPrice = na
+var float stopLossPrice = na
+var float targetPrice = na
+var float unitR = na
+var bool stage1Locked = false
+var bool stage2Locked = false
+var bool stage3Locked = false
 
 riskAmount = strategy.equity * (riskPerTrade / 100.0)
-perUnitRisk = atrStopMult * atr
-calcQty = perUnitRisk > 0 ? riskAmount / perUnitRisk : 0
-maxQty  = close > 0 ? (strategy.equity * 0.95) / close : 0
+perUnitRisk = effectiveStopMult * atr
+calcQty = perUnitRisk > 0 ? riskAmount / perUnitRisk : 0.0
+maxQty = close > 0 ? (strategy.equity * 0.95) / close : 0.0
+
 positionQty = 0.0
 if isCrypto
     positionQty := math.max(0.001, math.min(calcQty, maxQty))
 else
     positionQty := math.max(1.0, math.min(math.floor(calcQty), math.floor(maxQty)))
 
-// ─── 6. EXECUTION — INTRABAR BRACKET FILLS (Zero-Lookahead) ─────────────────
-var bool exitSignal = false
-exitSignal := false
-
 if strategy.position_size == 0
     stage1Locked := false
     stage2Locked := false
+    stage3Locked := false
     if longEntry and barstate.isconfirmed
-        entryPrice    := close
-        unitR         := atrStopMult * atr
+        entryPrice := close
+        unitR := effectiveStopMult * atr
         stopLossPrice := close - unitR
-        targetPrice   := entryPrice + 3.0 * unitR
+        targetPrice := entryPrice + (effectiveTpMult * unitR)
         strategy.entry("Long", strategy.long, qty=positionQty, comment="Enter Long")
-        strategy.exit("Bracket Exit", from_entry="Long", stop=stopLossPrice, limit=targetPrice)
+        strategy.exit("Bracket Exit", from_entry="Long", stop=stopLossPrice, limit=targetPrice, comment_profit="Exit Target", comment_loss="Exit Stop")
 
 if strategy.position_size > 0
     currentGainR = unitR > 0 ? (close - entryPrice) / unitR : 0.0
-    // Ratchet +1.5R → entry +0.5R
-    if currentGainR >= 1.5 and not stage1Locked
-        stage1Locked  := true
-        stopLossPrice := math.max(stopLossPrice, entryPrice + 0.5 * unitR)
-        strategy.exit("Bracket Exit", from_entry="Long", stop=stopLossPrice, limit=targetPrice)
-    // Ratchet +2.5R → entry +1.5R
-    if currentGainR >= 2.5 and not stage2Locked
-        stage2Locked  := true
-        stopLossPrice := math.max(stopLossPrice, entryPrice + 1.5 * unitR)
-        strategy.exit("Bracket Exit", from_entry="Long", stop=stopLossPrice, limit=targetPrice)
-    // Emergency exits (bearish divergence, date window)
-    if regularBear and barstate.isconfirmed
-        exitSignal := true
-        strategy.close("Long", comment="Bear Divergence Exit")
+    if currentGainR >= 0.90 and not stage1Locked
+        stage1Locked := true
+        stopLossPrice := math.max(stopLossPrice, entryPrice + (0.05 * unitR))
+        strategy.exit("Bracket Exit", from_entry="Long", stop=stopLossPrice, limit=targetPrice, comment_profit="Exit Target", comment_loss="Exit Stop")
+    if currentGainR >= 1.60 and not stage2Locked
+        stage2Locked := true
+        stopLossPrice := math.max(stopLossPrice, entryPrice + (0.80 * unitR))
+        strategy.exit("Bracket Exit", from_entry="Long", stop=stopLossPrice, limit=targetPrice, comment_profit="Exit Target", comment_loss="Exit Stop")
+    if currentGainR >= 2.40 and not stage3Locked
+        stage3Locked := true
+        stopLossPrice := math.max(stopLossPrice, entryPrice + (1.65 * unitR))
+        strategy.exit("Bracket Exit", from_entry="Long", stop=stopLossPrice, limit=targetPrice, comment_profit="Exit Target", comment_loss="Exit Stop")
+    if isStrongExit and barstate.isconfirmed
+        strategy.close("Long", comment="Strong Exit")
+    else if isPeakExit
+        strategy.close("Long", comment="Exit Reversal")
     if useDateFilter and not inTradeWindow
-        exitSignal := true
-        strategy.close("Long", comment="End Window Exit")
+        strategy.close("Long", comment="Window End")
 
-// Detect exit for HUD (when flat but was long prior bar)
-var string lastExitReason = "HOLD"
-if strategy.position_size == 0 and strategy.position_size[1] > 0
-    if strategy.closedtrades > strategy.closedtrades[1]
-        // Check if last trade was winner -> TP, else stop/bear
-        lastExitReason := "EXIT"
-    else
-        lastExitReason := "EXIT"
-else if strategy.position_size == 0
-    // If bear divergence active while flat, show EXIT briefly
-    if bearDivActive and ta.barssince(regularBear) <= 2
-        lastExitReason := "EXIT"
-    else
-        lastExitReason := "HOLD"
-
-// ─── 7. VISUALIZATION — MINIMALIST ONLY ────────────────────────────────────
-// Execution lines (hidden by default)
+// ─── 9. VISUAL OVERLAYS & HUD ────────────────────────────────────────────────
 plot(showExecutionLines and strategy.position_size > 0 ? stopLossPrice : na, "Stop Loss", color=color.new(color.red, 0), style=plot.style_linebr, linewidth=2)
-plot(showExecutionLines and strategy.position_size > 0 ? targetPrice : na, "Target 3R", color=color.new(color.teal, 0), style=plot.style_linebr, linewidth=2)
+plot(showExecutionLines and strategy.position_size > 0 ? targetPrice : na, "Target", color=color.new(color.teal, 0), style=plot.style_linebr, linewidth=2)
 
-// BUY — clean green triangle below candle (only on confirmed longEntry)
-plotshape(longEntry, title="BUY", style=shape.triangleup, location=location.belowbar, color=color.new(color.green, 0), size=size.small, text="BUY", textcolor=color.white)
+plotshape(isStrongBuy, title="STRONG BUY", style=shape.triangleup, location=location.belowbar, color=color.new(#006400, 0), size=size.small, text="STRONG BUY", textcolor=color.white)
+plotshape(isBuy, title="BUY", style=shape.triangleup, location=location.belowbar, color=color.new(color.green, 0), size=size.tiny, text="BUY", textcolor=color.white)
+// Mutually-exclusive exit visuals (priority: STRONG > REVERSAL > BRACKET-echo; WINDOW suppressed unless date filter on)
+exitPlotBracket = isStandardExit and not isStrongExit and not isPeakExit and lastExitReason != "WINDOW"
+plotshape(isStrongExit, title="STRONG EXIT", style=shape.triangledown, location=location.abovebar, color=color.new(#8B0000, 0), size=size.small, text="STRONG EXIT", textcolor=color.white)
+plotshape(isPeakExit, title="EXIT REVERSAL", style=shape.triangledown, location=location.abovebar, color=color.new(#CD5C5C, 0), size=size.tiny, text="EXIT REVERSAL", textcolor=color.white)
+plotshape(exitPlotBracket, title="EXIT BRACKET", style=shape.triangledown, location=location.abovebar, color=color.new(color.orange, 0), size=size.tiny, text="EXIT STOP/TARGET", textcolor=color.white)
+plotshape(isWindowExit and useDateFilter, title="EXIT WINDOW", style=shape.diamond, location=location.abovebar, color=color.new(color.gray, 0), size=size.tiny, text="WINDOW", textcolor=color.white)
+exitPlot = isStrongExit or isPeakExit or exitPlotBracket or (isWindowExit and useDateFilter)
 
-// EXIT — clean red triangle above candle (bear divergence, stop, TP, or position closed)
-exitPlot = (regularBear and barstate.isconfirmed and strategy.position_size > 0) or (strategy.position_size[1] > 0 and strategy.position_size == 0)
-plotshape(exitPlot, title="EXIT", style=shape.triangledown, location=location.abovebar, color=color.new(color.red, 0), size=size.small, text="EXIT", textcolor=color.white)
-
-// ─── 8. MINIMALIST 2-ROW HUD (Top-Right) ───────────────────────────────────
 var table hud = table.new(position.top_right, 2, 3, bgcolor=color.new(color.black, 80), border_color=color.new(color.gray, 60), border_width=1)
 if barstate.islast and showHUD
-    // Header
-    table.cell(hud, 0, 0, "MARKET REGIME", text_color=color.white, text_size=size.tiny, bgcolor=color.new(color.black, 0))
-    string regimeTxt = macroGate ? "BULLISH (Trending)" : "NEUTRAL / CHOP"
-    color regimeBg = macroGate ? color.new(color.green, 20) : color.new(color.gray, 20)
-    table.cell(hud, 1, 0, regimeTxt, text_color=color.white, text_size=size.tiny, bgcolor=regimeBg)
-
-    // Current status
-    table.cell(hud, 0, 1, "CURRENT STATUS", text_color=color.white, text_size=size.tiny, bgcolor=color.new(color.black, 0))
-    string statusTxt = ""
-    color statusBg = color.gray
+    table.cell(hud, 0, 0, "REGIME", text_color=color.white, text_size=size.tiny, bgcolor=color.new(color.black, 0))
+    string regTxt = macroGate ? (isMonthly ? "BULLISH (M12 Gate)" : isWeekly ? "BULLISH (M21 Gate)" : "BULLISH (W200+Hsg)") : "NEUTRAL / CHOP"
+    color regBg = macroGate ? color.new(color.green, 20) : color.new(color.gray, 20)
+    table.cell(hud, 1, 0, regTxt, text_color=color.white, text_size=size.tiny, bgcolor=regBg)
+    table.cell(hud, 0, 1, "STATUS", text_color=color.white, text_size=size.tiny, bgcolor=color.new(color.black, 0))
+    string statTxt = "HOLD / CASH"
+    color statBg = color.new(color.gray, 20)
     if strategy.position_size > 0
-        float gain = unitR > 0 ? (close - entryPrice) / unitR : 0.0
-        statusTxt := "ACTIVE LONG (+" + str.tostring(gain, "#.##") + " R)"
-        statusBg := color.new(color.green, 20)
-    else if lastExitReason == "EXIT"
-        statusTxt := "EXIT / TAKE PROFIT HIT"
-        statusBg := color.new(color.teal, 20)
-    else
-        statusTxt := "HOLD / CASH (Awaiting Setup)"
-        statusBg := color.new(color.gray, 20)
-    table.cell(hud, 1, 1, statusTxt, text_color=color.white, text_size=size.tiny, bgcolor=statusBg)
-    // Spacer row for breathing room
+        float rGain = unitR > 0 ? (close - entryPrice) / unitR : 0.0
+        statTxt := "ACTIVE LONG (+" + str.tostring(rGain, "#.##") + " R)"
+        statBg := color.new(color.green, 20)
+    else if isStrongExit
+        statTxt := "STRONG EXIT"
+        statBg := color.new(color.red, 20)
+    else if isPeakExit
+        statTxt := "EXIT REVERSAL"
+        statBg := color.new(#CD5C5C, 20)
+    else if isWindowExit and useDateFilter
+        statTxt := "EXIT WINDOW (artifact)"
+        statBg := color.new(color.gray, 20)
+    else if exitPlotBracket
+        statTxt := "EXIT STOP/TARGET"
+        statBg := color.new(color.orange, 20)
+    else if strategy.position_size == 0 and lastExitReason != "—"
+        statTxt := "LAST EXIT: " + lastExitReason
+        statBg := color.new(color.gray, 20)
+    else if not cooldownPassed
+        statTxt := "COOLDOWN"
+        statBg := color.new(color.orange, 20)
+    table.cell(hud, 1, 1, statTxt, text_color=color.white, text_size=size.tiny, bgcolor=statBg)
     table.cell(hud, 0, 2, "", text_size=size.tiny, bgcolor=color.new(color.black, 100))
-    table.cell(hud, 1, 2, "FINAL_BASELINE • 2.8R / 3.0R • W200", text_color=color.new(color.white, 40), text_size=size.tiny, bgcolor=color.new(color.black, 100))
-
-alertcondition(longEntry, "BUY — Long Entry", "BUY {{ticker}} @ {{close}} — RSI div + W200 + 2.8R stop")
-alertcondition(exitPlot, "EXIT — Take Profit / Stop / Bear", "EXIT {{ticker}} @ {{close}}")
+    table.cell(hud, 1, 2, "UCSv3 • TIERED • " + str.tostring(effectiveStopMult, "#.#") + "R / " + str.tostring(effectiveTpMult, "#.##") + "R", text_color=color.new(color.white, 40), text_size=size.tiny, bgcolor=color.new(color.black, 100))
