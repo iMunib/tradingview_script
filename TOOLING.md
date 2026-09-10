@@ -24,8 +24,13 @@ Probed 2026-09-09 (scripts `probe_tester*.py`, `probe_study*.py`, `probe_scroll*
 | `scripts/stats_validation.py` | Block-bootstrap (10-trade blocks, 2000 resamples, seed 7) 90% PF CI + sign-flip permutation null + maxDD proxy; `profit_usd` alias added | Run on Full + IS logs |
 | `scripts/verify_visuals.py` (+ `diag_mag.py`, `diag_plots.py`) | Counts shape-plot firings per class from chart model; cross-checks CSV exit reasons | Run — §4 verification (found + documented STOP×2 emission, entry over-plot) |
 | `scripts/diag_chart.py` | Chart-state dump (symbol/interval/sources/report head) | Run — caught the `nz(string)` compile failure + stale-strategy state |
+| `scripts/run_generalization.py` | **New (this session).** Out-of-basket sweep: DIA/IWM/AAPL/MSFT/ETHUSD × Full/IS/OOS 1D via current master/IS/OOS variants → `metrics/generalization.json` | **Run** — 15 cells: MSFT PF 1.531 sole pass; DIA 0.775, IWM 0.663, AAPL 0.611 powered FAILs; ETH N=12 low-N |
 | `runner.py` (`CDPClient`, `get_ws_url`) | CDP transport on `ws://127.0.0.1:9222` | Used throughout; browser stayed up all session |
 | `git` | version control | Used throughout (`fetch`/`pull --rebase` + push with output shown) |
+
+## Retired this session (excised from master per evidence — see audit H10)
+
+CMF-20 calculation + `cmf>0.05` absorption legs (ablation sens ~0, five exact 0.0); FRED:PERMIT security call + `permitsSlope` + housing macroGate leg (sens 0.0 crypto / weak-inconsistent equities + publication lag); 3-stage ratchet 0.90→+0.05/1.60→+0.80/2.40→+1.65 and +3.0R/+3.45R decorative targets (0 fills in 210 trades); ungated entry shapes + 2-bar TARGET/STOP emission (H9). Scoped Donchian `qqqBreakout` RETAINED (never ablated; removal unevidenced).
 
 ## Retired / forensic (kept for audit trail; do not extend)
 
@@ -33,4 +38,6 @@ Probed 2026-09-09 (scripts `probe_tester*.py`, `probe_study*.py`, `probe_scroll*
 
 ## Pending (specified, not built)
 
-Per-trade List-of-Trades DOM export (needs paid plan); intrabar-grain fill-sequencing audit for the H8 residual (needs tick data); 10+ untuned-ticker generalization run (H5); entry-vote vs exit-trigger split ablations (Fisher/RSI/VolPct/MACD); CMF-20 + PERMIT removal rerun (recommended, not yet applied — removal edits deliberately held for review, not snuck into this commit).
+Per-trade List-of-Trades DOM export (needs paid plan); intrabar-grain fill-sequencing audit for the H8 residual (needs tick data); 10+ untuned-ticker generalization run (5-ticker H5 run done this session: 1/5 pass — full 10+ still open); entry-vote vs exit-trigger split ablations (Fisher/RSI/VolPct/MACD); re-run of walk-forward + ablation suites against the CURRENT master (`run_phase3.py`/`run_ablation.py` transforms reference excised CMF/PERMIT code — update before reuse; their committed CSVs are stale-arch).
+
+Note: `run_phase3.py` and `run_ablation.py` rows above describe the prior-architecture runs; artifacts superseded by this session's sweep/trade-logs/generalization until re-run.

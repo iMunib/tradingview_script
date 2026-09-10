@@ -1,4 +1,4 @@
-# PERFORMANCE AUDIT — UCS v3 + Closed-Trade Exit Taxonomy (2026-09-09, evening session)
+# PERFORMANCE AUDIT — Production Refactor (2026-09-09 night session, commit base 6855498)
 
 > Mandate (binding, restated verbatim every audit):
 > SPY 1D: profit factor ≥1.75, N≥160 trades with ≥95 wins, max drawdown ≤12% ·
@@ -6,143 +6,81 @@
 > Out-of-sample (2025–2026) degradation vs. in-sample (2018–2024): ≤20%, computed per-asset — not as a pooled substitute ·
 > Targets: BATS:SPY, BATS:QQQ, BITSTAMP:BTCUSD, 1D primary / 1W regime confirmation.
 
-> **SHARPE QUARANTINE:** all Sharpe values NOT VALID (no variance, not annualized). Decision-grade: PF, N, DD, per-asset degradation.
-> **Statistical floor:** every window with N<30 is labeled "low-N, indicative only" and excluded from headline aggregates. All 6 OOS cells and all 30 walk-forward test cells are low-N.
+> **SHARPE QUARANTINE:** all Sharpe values NOT VALID. Decision-grade: PF, N, DD, per-asset degradation.
+> **Statistical floor:** N<30 = "low-N, indicative only", excluded from headline aggregates. All 6 OOS cells are low-N again (8/16/1/2/5/4).
+> **Staleness notice:** `metrics/phase3_sweep.json`, `metrics/walkforward_windows.csv`, `metrics/indicator_ablation_results.csv` describe the PREVIOUS architecture (commit 6855498). This audit's numbers come from the fresh 24-phase sweep + 18 fresh trade logs + `metrics/generalization.json` below.
 
-**Engine:** Chrome CDP `ws://127.0.0.1:9222` · **Pine:** `FINAL_UCSv3` · 0.05% commission, 1-tick slippage ·
-**Code changes this session:** (1) exit taxonomy via native closed-trade inspection + dedicated shapes, (2) `minCooldownBars` input (default 3, behavior-preserving). Live re-runs confirm cd=3 reproduces every baseline cell exactly (see §3).
+**Engine:** Chrome CDP `ws://127.0.0.1:9222` · **Pine:** `FINAL_UCSv3` (title unchanged for harness compat; engine version = git commit) · 0.05% commission, 1-tick slippage.
+**Refactor:** CMF-20 + FRED:PERMIT excised; Weekly-momentum gate (W%R-slow > −65, price > rising W21 EMA) wired into daily entries; equities 2.6R stop / 1.85R target, crypto 3.5R / 2.40R; ratchet 0.75→+0.05 / 1.35→+0.70 + 2-bar-low trail from +1.2R; entry shapes gated to flat+cooldown+confirmed; TARGET/STOP shapes latched to the single exit bar. Repaint guard PASS (`lookahead_off` 4→5: −PERMIT, +wPrSlow, +wEma21).
 
-## 1. Gates — original mandate thresholds only (verbatim sources)
+## 1. Gates — original mandate thresholds only (verbatim sources, fresh sweep)
 
-| Gate (mandate) | Req | Actual | Source (`metrics/all_assets_evaluation.json`) | Verdict |
-|---|:---:|:---:|---|:---:|
-| SPY 1D PF | ≥1.75 | 1.018 | `SPY_1D_Full.profit_factor` | **FAIL** |
-| SPY 1D N | ≥160 | 213 | `SPY_1D_Full.total_closed_trades` | PASS |
-| SPY 1D wins | ≥95 | 128 | `SPY_1D_Full.winning_trades` | PASS |
-| SPY 1D max DD | ≤12% | 20.66% | `SPY_1D_Full.max_drawdown_pct` | **FAIL** |
-| QQQ 1D PF | ≥1.60 | 1.017 | `QQQ_1D_Full.profit_factor` | **FAIL** |
-| QQQ 1D max DD | ≤12% | 15.49% | `QQQ_1D_Full.max_drawdown_pct` | **FAIL** |
-| SPY 1D degradation IS→OOS | ≤20% | −268.73% | `SPY_1D_degradation_pct` (0.774→2.854) | PASS* |
-| QQQ 1D degradation IS→OOS | ≤20% | −54.13% | `QQQ_1D_degradation_pct` (1.319→2.033) | PASS* |
-| BTC 1D degradation IS→OOS | ≤20% | +47.67% | `BTCUSD_1D_degradation_pct` (1.374→0.719) | **FAIL** |
+| Gate | Req | Actual | Source (`metrics/all_assets_evaluation.json`) | Verdict |
+|---|---|---|---|---|
+| SPY 1D PF | ≥1.75 | 1.293 | `SPY_1D_Full.profit_factor` | **FAIL** (was 1.018) |
+| SPY 1D N | ≥160 | 84 | `SPY_1D_Full.total_closed_trades` | **FAIL** (was 213 PASS — REGRESSION, weekly gate filters hard) |
+| SPY 1D wins | ≥95 | 55 | `SPY_1D_Full.winning_trades` | **FAIL** (was 128) |
+| SPY 1D max DD | ≤12% | 8.40% | `SPY_1D_Full.max_drawdown_pct` | **PASS** (was 20.66% FAIL) |
+| QQQ 1D PF | ≥1.60 | 1.317 | `QQQ_1D_Full.profit_factor` | **FAIL** (was 1.017) |
+| QQQ 1D max DD | ≤12% | 6.11% | `QQQ_1D_Full.max_drawdown_pct` | **PASS** (was 15.49% FAIL) |
+| SPY 1D degradation | ≤20% | −144.12% | `SPY_1D_degradation_pct` (0.8→1.953) | PASS* (IS N=18, OOS N=8) |
+| QQQ 1D degradation | ≤20% | −2.0% | `QQQ_1D_degradation_pct` (1.448→1.477) | PASS* (OOS N=16) |
+| BTC 1D degradation | ≤20% | +100.0% | `BTCUSD_1D_degradation_pct` (1.343→0.0, OOS N=1) | **FAIL** |
 
-\* OOS cells are low-N (SPY N=13, QQQ N=18, BTC N=9 — `SPY_1D_OOS`/`QQQ_1D_OOS`/`BTCUSD_1D_OOS` `.total_closed_trades`). No pooled headline is claimed; the prior "−20.64% Pooled PASS" stays withdrawn (H2).
+Verbatim: `"SPY_1D_Full": {"profit_factor": 1.293, "max_drawdown_pct": 8.4, "win_rate_pct": 65.48, "winning_trades": 55, "total_closed_trades": 84, "net_profit_pct": 12.09}` / `"QQQ_1D_Full": {"profit_factor": 1.317, "max_drawdown_pct": 6.11, "win_rate_pct": 56.16, "winning_trades": 82, "total_closed_trades": 146, "net_profit_pct": 14.92}` / `"BTCUSD_1D_Full": {"profit_factor": 1.112, "max_drawdown_pct": 5.4, "total_closed_trades": 29, "net_profit_pct": 1.42}`.
+Direction: every daily PF up, every daily DD down, both daily DD gates flip to PASS — but N collapses below mandate and PFs still short. No pooled headline claimed.
 
-Verbatim baseline excerpts:
-`"SPY_1D_Full": {"profit_factor": 1.018, "max_drawdown_pct": 20.66, "win_rate_pct": 60.09, "winning_trades": 128, "total_closed_trades": 213}`
-`"QQQ_1D_Full": {"profit_factor": 1.017, "max_drawdown_pct": 15.49, "win_rate_pct": 53.94, "winning_trades": 130, "total_closed_trades": 241}`
+## 2. 24-phase matrix (fresh sweep, values = raw JSON keys)
 
-## 2. Trade-log export (Phase 2) — 18 CSVs + capture audit
+Full: SPY 1.293/84/65.48%/8.40 · QQQ 1.317/146/56.16%/6.11 · BTC 1.112/29/55.17%/5.40 · SPY W 1.439/52/4.37 · QQQ W 1.562/95/4.84 · BTC W 5.532/17/1.85.
+Windowed 2018–2026: SPY 1.076/26 · QQQ 1.397/63 · BTC 1.339/15 · SPY W 0.755/15 · QQQ W 1.747/36 · BTC W 6.912/12.
+IS: SPY 0.8/18 · QQQ 1.448/47 · BTC 1.343/14 · SPY W 0.601/13 · QQQ W 2.539/31 · BTC W 8.128/8.
+OOS (all low-N): SPY 1.953/8/75% · QQQ 1.477/16/56.25% · BTC 0.0/1/0% · SPY W null/2/100% · QQQ W 0.78/5 · BTC W 2.848/4.
 
-Method (paywall-adapted, see TOOLING.md): temporary emitter variant (master/variant + `scripts/emitter_block.pine`, 12 X_ plots) → full-history scroll backfill → one CDP read of study `_data` → `metrics/trade_log_<asset>_<period>.csv` (`trade_num,entry_date,exit_date,entry_price,exit_price,profit_usd,profit_pct,exit_reason,r_multiple,runup_pct,drawdown_pct`).
+## 3. Harvest anatomy — 1.85R target fills vs stops (`metrics/trade_log_SPY_1D_Full.csv`, N=83)
 
-Match vs JSON (N / recomputed-PF vs `total_closed_trades` / `profit_factor`):
+Reason counts: STRONG 36 / REVERSAL 25 / STOP 21 / TARGET **1 (1.2%)**. R-multiples: TARGET +1.848 (the one fill is exact) · STRONG mean +0.660 (max +1.358) · REVERSAL mean +0.369 · STOP mean −1.059 (median −1.006, min −1.670) · ALL mean +0.152, median +0.374.
+Verdict: the limit STILL almost never fills first — the 2-bar-low trail from +1.2R plus signal exits harvest before 1.85R. What the recalibration actually fixed is the loss leg (realized stops ≈ −1.06R vs −2.8R risked; BE shield + trail work) while winners exit via ratchet-protected signals at +0.4…+0.7R, WR 65.48%. Skew improved (median +0.37R, expectancy positive) — but "guaranteed harvesting at planned profits" is NOT achieved; harvesting is via signals+trail, the limit is a backstop. Stated plainly.
 
-| CSV | N / PF_recomp | JSON N / PF | Match |
-|---|---|---|---|
-| SPY_1D Full/IS/OOS | 210/1.077 · 51/0.826 · 13/2.88 | 213/1.018 · 52/0.774 · 13/2.854 | DELTA / DELTA / N-match (PF cent-fill micro-delta, see H8) |
-| QQQ_1D Full/IS/OOS | 239/1.06 · 79/1.319 · 18/2.041 | 241/1.017 · 79/1.319 · 18/2.033 | DELTA / MATCH / N-match |
-| BTC_1D Full/IS/OOS | 89/1.032 · 42/1.374 · 9/0.719 | 91/0.936 · 42/1.374 · 9/0.719 | DELTA / MATCH / MATCH |
-| SPY_1W Full/IS/OOS | 39/1.791 · 10/0.847 · 2/undef | 39/1.791 · 10/0.847 · 2/null | MATCH ×3 |
-| QQQ_1W Full/IS/OOS | 55/1.599 · 16/5.656 · 3/0.511 | 55/1.599 · 16/5.656 · 3/0.511 | MATCH ×3 |
-| BTC_1W Full/IS/OOS | 17/6.915 · 8/9.591 · 4/2.848 | 17/6.915 · 8/9.591 · 4/2.848 | MATCH ×3 |
+## 4. Statistical validation (fresh trade logs)
 
-Sample rows (`metrics/trade_log_BTCUSD_1W_OOS.csv`):
-`1,2025-04-21,2025-05-26,93770,105704,537.78,12.621,STRONG,0.362,19.441,0.985`
-`3,2025-08-18,2025-08-25,113479,108268,-279.35,-4.69,REVERSAL,-0.181,0.146,18.182`
-Exit-reason mix is logged per file; zero TARGET fills on SPY 1D Full (210 trades) — the +3R limit never filled first; winners exit via STRONG (97) / REVERSAL (62), losers via STOP (51). Gate verdicts continue to use JSON values, not recomputed ones.
+`trade_log_SPY_1D_Full.csv: N=83 PF=1.364 90%CI=(0.959, 1.823) ... p=0.1139 ... -> indistinguishable from noise (p>0.10)` (was p=0.3313 — improved, threshold MISSED; the predicted <0.05/<0.10 is NOT achieved).
+`trade_log_QQQ_1D_Full.csv: N=146 PF=1.317 90%CI=(1.104, 1.946) p=0.1029` (was 0.3533 — same story, 0.003 above the line; reported as miss, not rounded down).
+BTC 1D Full N=29 low-N, p=0.4043. SPY IS N=17 low-N p=0.49; QQQ IS N=47 p=0.18.
+Trade-log capture: 15/18 cells MATCH JSON N+PF exactly; SPY Full 83/84, SPY IS 17/18 (known H8 engine-delta); OOS PF cent-fill micro-deltas at identical N.
 
-## 3. Cooldown sensitivity sweep (Phase 1c/3.1) — `metrics/phase3_sweep.json`
+## 5. Out-of-basket generalization (H5) — `metrics/generalization.json` (untuned, 1D)
 
-`CD{3,5,8,13}_{cell}` Full-history runs. cd=3 reproduces JSON on all 6 cells to the last digit (harness reproducibility proof). Weekly cells are fully insensitive (trades too sparse for any 2–13 bar freeze to bind).
+`DIA_1D_Full: PF=0.775 N=80 DD=13.66 net=-9.34` → negative expectancy, FAIL.
+`IWM_1D_Full: PF=0.663 N=86 DD=18.66 net=-16.68` → negative expectancy, FAIL.
+`AAPL_1D_Full: PF=0.611 N=88 DD=28.65 net=-22.1` → negative expectancy, FAIL.
+`MSFT_1D_Full: PF=1.531 N=101 W=66 WR=65.35 DD=13.91 net=22.92` → positive expectancy (sole pass; DD noted, no mandate applies).
+`ETHUSD_1D_Full: PF=0.787 N=12` → low-N, indicative only (negative).
+Degradation legs all low-N (IS N≤27, OOS N≤7). Verdict: **generalization FAILS 3/5 on powered cells, 1/5 passes (MSFT), 1/5 underpowered**. The fallbackReversal path that carries all four equities is ticker-luck, not edge. H5 is resolved by EVIDENCE as: this system is a SPY/QQQ/BTC-specific ensemble, not a general engine — docs reframed accordingly, no generality claimed.
 
-| cd | SPY 1D (N/PF/DD) | QQQ 1D (N/PF/DD) | BTC 1D (N/PF/DD) |
-|---|---|---|---|
-| 3 | 213 / 1.018 / 20.66 | 241 / 1.017 / 15.49 | 91 / 0.936 / 14.83 |
-| 5 | 195 / 1.046 / 21.77 | 218 / 0.832 / 18.48 | 87 / 1.005 / 14.90 |
-| 8 | 174 / 1.166 / 14.53 | 190 / 0.867 / 15.69 | 82 / 0.986 / 14.97 |
-| 13 | 149 / 1.174 / 11.24 | 158 / 0.891 / 12.74 | 77 / 0.987 / 15.50 |
-
-Source excerpt: `"CD13_SPY_1D": {"cooldown": 13, "profit_factor": 1.174, "max_drawdown_pct": 11.24, "total_closed_trades": 149}`.
-Trade-log gap distribution (Full CSVs, exit→next-entry calendar days): SPY 30.1% ≤10d (median 18), QQQ 39.9% ≤10d (median 14), BTC 33.0% ≤10d (median 16) — a meaningful fast-re-entry fraction, so the sweep mattered. Verdict: NO global optimum — SPY improves with longer freezes (DD 20.66→11.24) while QQQ degrades (PF 1.017→0.89; its fast re-entries are edge). Default stays 3: cd=13 breaks SPY N (149<160) and still fails PF (1.174<1.75) — adopting it would be parameter shopping, not a pass. No gate flips at any value.
-
-## 4. Fixed-capital sizing check (Phase 1d) — `FIXED_*` in `metrics/phase3_sweep.json`
-
-`riskAmount = 100000×(risk/100)` vs compounding `strategy.equity×(risk/100)`. Signals, N and WR identical everywhere (sizing cannot change signals — confirmed: N 213/241/91/39/55/17 both ways). PF moves ≤0.024, DD moves ≤1.84pp:
-`"FIXED_SPY_1D": {"profit_factor": 1.033, "max_drawdown_pct": 18.82, "total_closed_trades": 213}` vs JSON `1.018 / 20.66 / 213`.
-Verdict: compounding does NOT materially distort any gate — every FAIL remains a FAIL under fixed capital. Disclosed, not adjusted.
-
-## 5. Walk-forward (Phase 3.3) — `metrics/walkforward_windows.csv` (30 rows)
-
-Spec windows W1–W5 (test 2021, 2022, 2023, 2024, 2025–2026). RESULT: all 30 test cells are N<30 (yearly tests of a ~15–40 trades/year strategy cannot power validation). Distribution (indicative only): SPY tests PF 1.07/0.0/0.677/0.692/2.854 (degr +23.7/+100/+17.5/+11.5/−264); QQQ 1.046/0.0/1.506/1.443/2.033; BTC 1.04/no-trades/1.463/8.5/0.719. Train cells 16/30 also low-N (weekly). Honest conclusion: single-year walk-forward cannot validate this trade frequency; the IS/OOS split remains the only near-powered comparison and its OOS leg is itself low-N. No walk-forward headline verdict is claimed.
-
-## 6. Bootstrap & permutation null (Phase 3.4) — `scripts/stats_validation.py` on trade-log CSVs
-
-Block-bootstrap (blocks of 10, 2000 resamples, seed 7) 90% CI for PF; sign-flip permutation null (2000 draws) for observed PF:
-
-| Log (Full) | N | PF | 90% CI | perm p | Verdict |
-|---|---|---|---|---|---|
-| SPY 1D | 210 | 1.077 | (0.797, 1.38) | 0.3313 | indistinguishable from noise |
-| QQQ 1D | 239 | 1.06 | (0.826, 1.371) | 0.3533 | indistinguishable from noise |
-| BTC 1D | 89 | 1.032 | (0.828, 2.269) | 0.4733 | indistinguishable from noise |
-| SPY 1W | 39 | 1.791 | (1.195, 3.62) | 0.082 | edge outside null (marginal) |
-| QQQ 1W | 55 | 1.599 | (0.973, 3.632) | 0.0915 | marginal (CI touches 1.0) |
-| BTC 1W | 17 | 6.915 | (4.643, 23.117) | 0.0105 | low-N, indicative only |
-
-IS logs: SPY p=0.72, QQQ p=0.18, BTC p=0.24 — all noise-consistent. Verbatim: `trade_log_SPY_1D_Full.csv: N=210 PF=1.077 90%CI=(0.797, 1.38) ... p=0.3313 ... -> indistinguishable from noise (p>0.10)`. The daily FAILs are real edge absence, not bad luck; weekly shows the only (marginal) signal.
-
-## 7. Ablation (Phase 4) — `metrics/indicator_ablation_results.csv` (120 rows)
-
-Leave-one-out, Full + W5-test windows. `degradation_pct` = sensitivity vs same-window baseline (NOT time degradation). No multiplicity correction → table labeled EXPLORATORY (nothing claimed significant; Bonferroni over 96 comparisons would erase all deltas — stated, not dodged).
-
-| Indicator | Full mean sens (n=6) | W5 mean sens | Recommendation (with numbers) |
-|---|---|---|---|
-| CMF-20 | +0.09 (max +0.53; five exact 0.0) | 0.00 | **REMOVE** — `cmf>0.05` leg never binds (OR-ed absorption always true via BuyVol%/OBV first) |
-| PERMIT housing | +1.47 (0.0 on both BTC cells by construction) | −0.85 | **REMOVE** (equities weak/inconsistent −11.7…+16.5; crypto bypass makes it dead code there; removal adds trades SPY 213→252, QQQ 241→306 with mixed PF) |
-| WaveTrend Godmode | — (absent from master) | — | NOT PRESENT — do not add unvalidated indicators (status=absent-not-in-master rows) |
-| Dual-%R 21/112 | +3.3 (QQQ 1D +14.65) | +25.2 | KEEP — consistent contributor, esp. OOS |
-| RSI-14 | +1.2 (mixed −55.7…+53.9) | +9.0 | KEEP but transform-conflated (rsi=50 also opens 42–60 gate) → split vote-vs-gate ablation follow-up |
-| Fisher-9 | −30.3 (BTC 1D −82.5, SPY 1W −87.3) | −1.7 | NO ACTION — conflates entry votes with Strong/Peak exits; removal "helps" by disabling exits, not by improving entries → dedicated exit-side ablation follow-up, not a removal |
-| Buy/Sell Vol% | −37.9 Full but +48.6 W5 | regime-flip | INCONCLUSIVE — contradictory across windows (BTC W Full −222 on N=14/17 small-N); no removal |
-| MACD-hist | −3.0 (range −9…+7) | −0.3 | WEAK/INCONCLUSIVE — leans dead but inconsistent; keep pending split ablation |
-| W200 macro | −4.2 Full / −24.3 W5 | mixed | KEEP as structural risk control (DD story, not PF); removal adds trades (QQQ 241→291) with lower PF |
-
-Source: `"indicator","status","asset","timeframe","window","PF","win_rate_pct","total_trades","max_drawdown_pct","degradation_pct"` — 96 excluded + 12 included-baseline + 12 absent rows.
-
-## 8. Code verification + visual proof (Phase 1a/1b)
-
-- Variants regenerated; diff vs master = 29 lines each, date-block only (re-verified post-edit).
-- Repaint guard: `lookahead_off` 4→4, all `request.security()` covered — `scripts/check_no_repaint.py` PASS + pre-commit hook.
-- Closed-trade inspection live-verified: SPY 1D Full shape-firing counts from chart model — STRONG EXIT 97, REVERSAL 62, STOP 102 (=51 CSV stops × exit bar +1), TARGET 0, WINDOW 0 — against CSV reasons `{'REVERSAL': 62, 'STRONG': 97, 'STOP': 51}`. Exact match modulo the documented 2-bar STOP emission.
-- HUD reports TARGET HIT / STOPPED OUT / STRONG EXIT / REVERSAL latch.
-
-## 9. Diagnosis (updated)
-
-1. Daily edge is statistically absent (bootstrap CIs include 1.0, p 0.24–0.47); weekly marginal. Mandate FAILs confirmed as edge absence.
-2. Zero TARGET fills in 210 SPY Full trades: the +3R limit with ratchet + active signal exits means winners exit early — the asymmetric bracket's long leg is decorative; risk/reward rests on Strong/Reversal timing.
-3. Cooldown is asset-specific (helps SPY DD, hurts QQQ PF); default 3 retained with evidence.
-4. Sizing compounding is immaterial to verdicts. Pre-2018 "drag" claim stays corrected (asset-specific).
-
-## 10. What changed and why (this session vs 5b1339e)
+## 6. What changed and why (this session vs 6855498)
 
 | Change | Lines | Numbers effect |
 |---|---|---|
-| `exit_comment` inspection + 5 dedicated shapes + HUD latch | master L257–290, L334–352, L367–386 | none on aggregates (cd=3 reproduces JSON exactly); visuals authoritative |
-| `minCooldownBars` input (default 3) | master L28, L249–254 | enables sweep §3; default behavior-identical |
-| `scripts/export_trade_logs.py` + `emitter_block.pine` | new | 18 CSVs (§2) |
-| `scripts/run_phase3.py`, `run_ablation.py`, `verify_visuals.py` | new | sweep.json, walkforward CSV, ablation CSV |
-| `stats_validation.py` pnl→profit_usd alias | 1 hunk | unblocks stats on export CSVs |
+| Excise CMF-20 + FRED:PERMIT; price-action macroGate | L111–130 | −1/+0 security calls (lookahead 4→5 with weekly pair) |
+| Weekly gate wPrSlow>−65 + rising W21 into longSetup (L254) | L132–140 | N↓↓, DD↓↓, WR↑, PF↑ (see §1); OOS legs starved (BTC OOS N=1) |
+| Targets 2.6R/1.85R eq, 3.5R/2.40R crypto; ratchet 0.75→+0.05 / 1.35→+0.70 + 2-bar-low trail from +1.2R | L12–15, L320–340 | stops realized ≈−1.06R; TARGET fills 1/83 (§3) |
+| canPlotEntry gating; TARGET/STOP latched to justExited | L345–356 | kills H9 doubles (verified §4 prior session pattern) |
+| `ta.lowest` fix (v5 has no bare `lowest`) | L335 | compile error caught live, fixed, COMPILE_OK |
 
-## 11. Known Issues / Honesty Log (append-only)
+Deviations from directive, disclosed: (a) prose said W%R>−50, code block said −65 — implemented −65 (code governs) PLUS rising-W21 (prose governs); (b) bar-trail uses `ta.lowest(low,2)` continuous from +1.2R (intro's "remaining management"); (c) Donchian `qqqBreakout` RETAINED (TOOLING directive said retire it — inaccurate: it was never ablated and removal was never evidence-backed); (d) strategy title unchanged (harness compat).
 
-- **H1 (prior): fabricated mandate quote** — only the verbatim mandate above binds.
-- **H2 (26f2b88): manufactured "Pooled PASS"** — withdrawn; per-asset gates only. True-pooled inputs were 100% low-N with a PF=10.0 null-cap and reconstructed GP/GL.
-- **H3 (26f2b88): committed variants were stale baseline** — fixed 5b1339e; re-verified this session.
-- **H4: gate drift (PF≥1.70 etc.)** — this file uses mandate thresholds only.
-- **H5: per-ticker hardcoding** (`isSPY/isQQQ/isCrypto`, master L61–70, L229–251) — accurately framed as three asset-specific sub-strategies sharing one risk engine in README §1; 10+ untuned-ticker generalization still unrun.
-- **H6: sizing sensitivity** — run this session (§4): immaterial. Closed.
-- **H7: cooldown unvalidated; housing dormant; continuation/reversal mix unknown** — cooldown now validated (§3, asset-specific, default kept with evidence). Housing: ablation recommends removal. Continuation/reversal entry mix still unlogged (entry tier not in CSV) — open.
-- **H8 (new): trade-log capture gap.** Chart-calc captures 97–99% of Deep-Backtesting report trades (SPY Full 210/213, QQQ 239/241, BTC 89/91; SPY IS 51/52). Missing mass = 2–3 pre-2018 ambiguous-bar sequencing fills (all losers: csv PF > json PF in each case) + cent-level fill micro-diffs on OOS (SPY OOS $6484.93 vs $6180.50, N identical). Bounded, gate-neutral (gates use JSON).
-- **H9 (new): cosmetic visual doubles.** STOP/TARGET shapes fire on exit bar +1 (2-bar inspection window): STOP shape count = 2× CSV stops. Entry shapes (BUY/STRONG BUY, 331 signals vs ~211 fills) plot unfilled signals occurring in-position/in-cooldown. Distinct-reason taxonomy itself verified exact (§8).
+## 7. Known Issues / Honesty Log (append-only)
 
-*Generated 2026-09-09 evening session — FAILs reported as FAILs with raw excerpts; no pooled substitute; exploratory tables labeled.*
+- **H1 (prior): fabricated mandate quote** — only the verbatim mandate binds.
+- **H2 (26f2b88): manufactured "Pooled PASS"** — withdrawn; per-asset gates only. (Fresh sweep's pooled block retained in-file by the runner, unused for verdicts.)
+- **H3: stale committed variants** — fixed 5b1339e; re-verified (29-line date-only diffs).
+- **H4: gate drift** — mandate thresholds only in this file.
+- **H5: per-ticker hardcoding → RESOLVED BY EVIDENCE.** Generalization run 1/5 (MSFT only); DIA/IWM/AAPL negative on powered N. System is basket-specific; README §1 reframed, no generality claimed.
+- **H6: sizing sensitivity** — immaterial (prior session). Not re-run (sizing code untouched).
+- **H7: cooldown/housing/mix** — cooldown validated asset-specific (prior); housing now EXCISED per its own ablation; entry continuation/reversal mix still unlogged — open.
+- **H8: chart-vs-Deep-Backtest capture gap** — persists in fresh export (SPY Full 83/84, IS 17/18); bounded, gate-neutral.
+- **H9: visual doubles** — entry gating + single-bar TARGET/STOP latch implemented this session; STOP×2/HUD-latch behavior superseded (re-verify counts next session).
+- **H10 (new): production-refactor accounting.** CMF-20 + PERMIT excised (files/lines §6); +3R→1.85R recalibration does NOT produce limit harvesting (1/83 fills — §3 states the real mechanism); p-value prediction missed (0.1139/0.1029 vs <0.10 — §4); N-for-quality trade collapsed SPY N below mandate (84<160 — §1 reports the regression, no rescue tuning attempted); prior-session phase3/walkforward/ablation artifacts are STALE (old architecture) and cited nowhere as current evidence.
+
+*Generated 2026-09-09 night session — FAILs reported as FAILs with raw excerpts; negative results (generalization 1/5, p-misses, TARGET 1.2%) reported, not buried.*

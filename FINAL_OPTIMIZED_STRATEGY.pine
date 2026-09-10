@@ -9,10 +9,10 @@ strategy("FINAL OPTIMIZED — Ultimate Confluence Synthesis v3 (UCS v3)",
 // ─── 1. INPUT PARAMETERS ─────────────────────────────────────────────────────
 group_opt = "█ Strategy Optimization & Risk"
 rsiLength       = input.int(14, "RSI Length", minval=5, maxval=50, group=group_opt)
-atrStopMult     = input.float(2.8, "ATR Stop Multiplier (R) — Equities", minval=1.0, maxval=5.0, step=0.1, group=group_opt)
-tpMultiple      = input.float(3.0, "Take Profit Target (R) — Equities", minval=2.0, maxval=6.0, step=0.1, group=group_opt)
+atrStopMult     = input.float(2.6, "ATR Stop Multiplier (R) — Equities", minval=1.0, maxval=5.0, step=0.1, group=group_opt)
+tpMultiple      = input.float(1.85, "Take Profit Target (R) — Equities", minval=1.0, maxval=6.0, step=0.05, group=group_opt)
 cryptoStopMult  = input.float(3.5, "ATR Stop Multiplier (R) — Crypto", minval=1.0, maxval=6.0, step=0.1, group=group_opt)
-cryptoTpMult    = input.float(3.45, "Take Profit Target (R) — Crypto", minval=2.0, maxval=6.0, step=0.05, group=group_opt)
+cryptoTpMult    = input.float(2.40, "Take Profit Target (R) — Crypto", minval=1.0, maxval=6.0, step=0.05, group=group_opt)
 riskPerTrade    = input.float(1.5, "Risk Per Trade (%)", minval=0.5, maxval=5.0, step=0.1, group=group_opt)
 obvEmaLength    = input.int(20, "OBV EMA Smoothing", minval=5, maxval=100, group=group_opt)
 
@@ -108,32 +108,34 @@ prOversold = prFast <= -80 and prSlow <= -75
 prOverbought = prFast >= -20 and prSlow >= -25
 prReversal = prOversold[1] and prFast > -80
 
-// Intrabar Volume Delta & CMF 20
+// Intrabar Volume Delta (CMF-20 excised per ablation: sens ~0 — dead weight)
 rangeHL = high - low
 buyVol = rangeHL > 0 ? volume * (close - low) / rangeHL : volume * 0.5
 sellVol = rangeHL > 0 ? volume * (high - close) / rangeHL : volume * 0.5
 buyVolPct = (buyVol + sellVol > 0) ? buyVol / (buyVol + sellVol) : 0.5
-cmfNum = ta.sma(rangeHL > 0 ? ((2 * close - low - high) / rangeHL) * volume : 0.0, 20)
-cmfDen = ta.sma(volume, 20)
-cmf = cmfDen != 0 ? cmfNum / cmfDen : 0.0
 sellVolPct = (buyVol + sellVol > 0) ? sellVol / (buyVol + sellVol) : 0.5
 obvVal = ta.obv
 obvEma = ta.ema(obvVal, obvEmaLength)
-volAbsorbed = buyVolPct > 0.55 or cmf > 0.05 or obvVal > obvEma
-btcVolAbsorption = volAbsorbed or buyVolPct > 0.58 or cmf > 0.05
+volAbsorbed = buyVolPct > 0.55 or obvVal > obvEma
+btcVolAbsorption = volAbsorbed or buyVolPct > 0.58
 
-// ─── 5. MACRO GATING (Weekly 200 EMA + Housing Leading Indicator) ────────────
+// ─── 5. MACRO GATING (on-exchange price action only; FRED:PERMIT excised ─────
+// ─── per ablation: sens 0.0 on crypto by construction, weak/inconsistent on ──
+// ─── equities — dead weight + publication lag) ───────────────────────────────
 wEma200 = request.security(syminfo.tickerid, "W", ta.ema(close, 200)[1], lookahead=barmerge.lookahead_off)
-dEma200 = ta.ema(close, 200)
 mEma21  = request.security(syminfo.tickerid, "M", ta.ema(close, 21)[1], lookahead=barmerge.lookahead_off, ignore_invalid_symbol=true)
 mEma12  = request.security(syminfo.tickerid, "M", ta.ema(close, 12)[1], lookahead=barmerge.lookahead_off, ignore_invalid_symbol=true)
 wEma50Native = ta.ema(close, 50)
-float macroEma = isMonthly ? (not na(mEma12) ? mEma12 : wEma50Native) : isWeekly ? (not na(mEma21) ? mEma21 : wEma50Native) : (not na(wEma200) ? wEma200 : dEma200)
-macroTrendBull = not useWeeklyFilter or (close > macroEma)
-permits = request.security("FRED:PERMIT", "M", close[1], lookahead=barmerge.lookahead_off, ignore_invalid_symbol=true)
-permitsSma12Lag = ta.sma(permits, 12)[1]
-permitsSlope = not na(permits) and not na(permitsSma12Lag) ? permits - permitsSma12Lag : 1.0
-macroGate = macroTrendBull and (isCrypto or na(permits) or permitsSlope >= -50.0)
+float macroEma = isMonthly ? (not na(mEma12) ? mEma12 : wEma50Native) : isWeekly ? (not na(mEma21) ? mEma21 : wEma50Native) : (not na(wEma200) ? wEma200 : ta.ema(close, 200))
+macroGate = not useWeeklyFilter or (close > macroEma)
+
+// ─── 5b. WEEKLY MOMENTUM EXPANSION GATE (daily entries ride the weekly tide) ─
+// Daily dips are taken only while Weekly Dual %R slow is expanding (>-65) and
+// price holds above the rising Weekly 21 EMA. Bypassed on weekly+ timeframes.
+wPrSlow = request.security(syminfo.tickerid, "W", -100 * (ta.highest(high, 112)[1] - close[1]) / (ta.highest(high, 112)[1] - ta.lowest(low, 112)[1]), lookahead=barmerge.lookahead_off)
+wEma21 = request.security(syminfo.tickerid, "W", ta.ema(close, 21)[1], lookahead=barmerge.lookahead_off)
+wEma21Rising = wEma21 > wEma21[1]
+weeklyTrendAligned = isWeekly or isMonthly or (not na(wPrSlow) and not na(wEma21) and wPrSlow > -65 and close > wEma21 and wEma21Rising)
 
 // ─── 6. ORTHOGONAL CONFLUENCE DIVERGENCE ENGINE (RSI + MACD Hist + Fisher) ────
 pl = ta.pivotlow(low, pLeft, pRight)
@@ -249,7 +251,7 @@ if strategy.position_size[1] > 0 and strategy.position_size == 0
     lastExitBar := bar_index
 cooldownPassed = (bar_index - lastExitBar) >= (isWeekly ? 2 : minCooldownBars)
 
-longSetup = macroGate and (reversalSetup or continuationTrigger) and inTradeWindow and cooldownPassed
+longSetup = macroGate and weeklyTrendAligned and (reversalSetup or continuationTrigger) and inTradeWindow and cooldownPassed
 longEntry = longSetup and not longSetup[1]
 
 // Tiered signal classification (authoritative visuals)
@@ -292,7 +294,6 @@ var float targetPrice = na
 var float unitR = na
 var bool stage1Locked = false
 var bool stage2Locked = false
-var bool stage3Locked = false
 
 riskAmount = strategy.equity * (riskPerTrade / 100.0)
 perUnitRisk = effectiveStopMult * atr
@@ -308,7 +309,6 @@ else
 if strategy.position_size == 0
     stage1Locked := false
     stage2Locked := false
-    stage3Locked := false
     if longEntry and barstate.isconfirmed
         entryPrice := close
         unitR := effectiveStopMult * atr
@@ -319,18 +319,23 @@ if strategy.position_size == 0
 
 if strategy.position_size > 0
     currentGainR = unitR > 0 ? (close - entryPrice) / unitR : 0.0
-    if currentGainR >= 0.90 and not stage1Locked
+    // Empirical harvest ratchet (targets actually fill: 1.85R eq / 2.40R crypto):
+    // Stage 1 (Break-Even Shield): +0.75R -> stop to entry + 0.05R
+    if currentGainR >= 0.75 and not stage1Locked
         stage1Locked := true
         stopLossPrice := math.max(stopLossPrice, entryPrice + (0.05 * unitR))
         strategy.exit("Bracket Exit", from_entry="Long", stop=stopLossPrice, limit=targetPrice, comment_profit="Exit Target", comment_loss="Exit Stop")
-    if currentGainR >= 1.60 and not stage2Locked
+    // Stage 2 (Profit Capture): +1.35R -> stop to entry + 0.70R
+    if currentGainR >= 1.35 and not stage2Locked
         stage2Locked := true
-        stopLossPrice := math.max(stopLossPrice, entryPrice + (0.80 * unitR))
+        stopLossPrice := math.max(stopLossPrice, entryPrice + (0.70 * unitR))
         strategy.exit("Bracket Exit", from_entry="Long", stop=stopLossPrice, limit=targetPrice, comment_profit="Exit Target", comment_loss="Exit Stop")
-    if currentGainR >= 2.40 and not stage3Locked
-        stage3Locked := true
-        stopLossPrice := math.max(stopLossPrice, entryPrice + (1.65 * unitR))
-        strategy.exit("Bracket Exit", from_entry="Long", stop=stopLossPrice, limit=targetPrice, comment_profit="Exit Target", comment_loss="Exit Stop")
+    // Active High/Low Trailing Bar Stop: past +1.2R, trail at the 2-bar low (ratchets up only)
+    if currentGainR >= 1.20 and barstate.isconfirmed
+        barTrail = ta.lowest(low, 2)
+        if not na(barTrail) and barTrail > stopLossPrice
+            stopLossPrice := barTrail
+            strategy.exit("Bracket Exit", from_entry="Long", stop=stopLossPrice, limit=targetPrice, comment_profit="Exit Target", comment_loss="Exit Stop")
     if isStrongExit and barstate.isconfirmed
         strategy.close("Long", comment="Strong Exit")
     else if isReversalExit
@@ -342,21 +347,26 @@ if strategy.position_size > 0
 plot(showExecutionLines and strategy.position_size > 0 ? stopLossPrice : na, "Stop Loss", color=color.new(color.red, 0), style=plot.style_linebr, linewidth=2)
 plot(showExecutionLines and strategy.position_size > 0 ? targetPrice : na, "Target", color=color.new(color.teal, 0), style=plot.style_linebr, linewidth=2)
 
-plotshape(isStrongBuy, title="STRONG BUY", style=shape.triangleup, location=location.belowbar, color=color.new(#006400, 0), size=size.small, text="STRONG BUY", textcolor=color.white)
-plotshape(isBuy, title="BUY", style=shape.triangleup, location=location.belowbar, color=color.new(color.green, 0), size=size.tiny, text="BUY", textcolor=color.white)
+// Entry shapes fire ONLY when an order can actually fill: flat, cooldown done,
+// confirmed bar. (Previously plotted unfilled in-position/cooldown signals.)
+canPlotEntry = strategy.position_size == 0 and cooldownPassed and barstate.isconfirmed
+plotshape(isStrongBuy and canPlotEntry, title="STRONG BUY", style=shape.triangleup, location=location.belowbar, color=color.new(#006400, 0), size=size.small, text="STRONG BUY", textcolor=color.white)
+plotshape(isBuy and canPlotEntry, title="BUY", style=shape.triangleup, location=location.belowbar, color=color.new(color.green, 0), size=size.tiny, text="BUY", textcolor=color.white)
 // Mutually-exclusive exit visuals (in-position signals carry position>0;
-// bracket fills carry position==0, so classes cannot co-fire)
+// bracket fills carry position==0, so classes cannot co-fire).
+// TARGET/STOP shapes latch to the single exit bar (justExited), killing the
+// 2-bar double-fire; STRONG/REVERSAL/WINDOW are single-bar by construction.
 plotshape(isStrongExit, title="STRONG EXIT", style=shape.triangledown, location=location.abovebar, color=color.new(#8B0000, 0), size=size.small, text="STRONG EXIT", textcolor=color.white)
-plotshape(isTargetExit, title="EXIT TARGET", style=shape.diamond, location=location.abovebar, color=color.new(color.teal, 0), size=size.small, text="TARGET", textcolor=color.white)
-plotshape(isStopExit, title="EXIT STOP", style=shape.square, location=location.abovebar, color=color.new(color.orange, 0), size=size.small, text="STOP", textcolor=color.white)
+plotshape(isTargetExit and justExited, title="EXIT TARGET", style=shape.diamond, location=location.abovebar, color=color.new(color.teal, 0), size=size.small, text="TARGET", textcolor=color.white)
+plotshape(isStopExit and justExited, title="EXIT STOP", style=shape.square, location=location.abovebar, color=color.new(color.orange, 0), size=size.small, text="STOP", textcolor=color.white)
 plotshape(isReversalExit, title="EXIT REVERSAL", style=shape.triangledown, location=location.abovebar, color=color.new(#CD5C5C, 0), size=size.tiny, text="REVERSAL", textcolor=color.white)
 plotshape(isWindowExit and useDateFilter, title="WINDOW END", style=shape.circle, location=location.abovebar, color=color.new(color.gray, 0), size=size.tiny, text="WINDOW", textcolor=color.white)
-exitPlot = isStrongExit or isTargetExit or isStopExit or isReversalExit or (isWindowExit and useDateFilter)
+exitPlot = isStrongExit or (isTargetExit and justExited) or (isStopExit and justExited) or isReversalExit or (isWindowExit and useDateFilter)
 
 var table hud = table.new(position.top_right, 2, 3, bgcolor=color.new(color.black, 80), border_color=color.new(color.gray, 60), border_width=1)
 if barstate.islast and showHUD
     table.cell(hud, 0, 0, "REGIME", text_color=color.white, text_size=size.tiny, bgcolor=color.new(color.black, 0))
-    string regTxt = macroGate ? (isMonthly ? "BULLISH (M12 Gate)" : isWeekly ? "BULLISH (M21 Gate)" : "BULLISH (W200+Hsg)") : "NEUTRAL / CHOP"
+    string regTxt = macroGate ? (isMonthly ? "BULLISH (M12 Gate)" : isWeekly ? "BULLISH (M21 Gate)" : "BULLISH (W200)") : "NEUTRAL / CHOP"
     color regBg = macroGate ? color.new(color.green, 20) : color.new(color.gray, 20)
     table.cell(hud, 1, 0, regTxt, text_color=color.white, text_size=size.tiny, bgcolor=regBg)
     table.cell(hud, 0, 1, "STATUS", text_color=color.white, text_size=size.tiny, bgcolor=color.new(color.black, 0))

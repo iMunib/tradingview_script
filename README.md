@@ -1,46 +1,37 @@
-# Autonomous Quantitative Swing System — UCS v3 for TradingView
+# Autonomous Quantitative Swing System — UCS v3 Production Refactor (TradingView)
 
-> **SHARPE QUARANTINE:** all Sharpe values NOT VALID (no variance, not annualized). Decision-grade: PF, N, DD, per-asset degradation.
-> **Status:** Full-history mandate gates FAIL (see PERFORMANCE_AUDIT.md §1) — daily edge statistically indistinguishable from noise (§6); no pooled substitute claimed.
+> **SHARPE QUARANTINE:** all Sharpe values NOT VALID. Decision-grade: PF, N, DD, per-asset degradation.
+> **Status:** mandate gates MIXED after production refactor — both daily DD gates now PASS (8.40%/6.11%), all daily PFs up (1.293/1.317/1.112), but SPY N collapsed to 84 (<160) and PFs still short. Full verdicts: PERFORMANCE_AUDIT.md §1. No pooled substitute.
 
-**Target:** `BATS:SPY` · `BATS:QQQ` · `BITSTAMP:BTCUSD` · **TF:** 1D primary / 1W regime confirmation · **Engine:** Chrome CDP `ws://127.0.0.1:9222` · **Pine:** `//@version=5` · **Master:** [`FINAL_OPTIMIZED_STRATEGY.pine`](FINAL_OPTIMIZED_STRATEGY.pine) (`FINAL_UCSv3`).
+**Target:** `BATS:SPY` · `BATS:QQQ` · `BITSTAMP:BTCUSD` · **TF:** 1D primary / 1W regime confirmation · **Engine:** Chrome CDP `ws://127.0.0.1:9222` · **Pine:** `//@version=5` · **Master:** [`FINAL_OPTIMIZED_STRATEGY.pine`](FINAL_OPTIMIZED_STRATEGY.pine) (`FINAL_UCSv3` — title frozen for harness compat; version = git commit).
 
-## 1. Architecture (verified this session)
+## 1. Architecture (production refactor — verified live)
 
-- Hysteresis: `lastExitBar`, `cooldownPassed = bar−lastExit ≥ (weekly?2:minCooldownBars)` (`minCooldownBars` input, default 3, range 1–15). Sweep result: asset-specific — SPY DD improves with longer freezes, QQQ PF degrades; default 3 retained with evidence (audit §3). HUD shows COOLDOWN.
-- Entry tiering: `isStrongBuy = entry and (votes≥2 or (%R and BuyVol%>60))`; `isBuy = entry and not isStrongBuy` — mutually exclusive off one rising edge. Note: shapes plot signals even when no fill occurs in-position/in-cooldown (331 signals vs ~211 fills on SPY Full — cosmetic over-plot, audit H9).
-- Exit taxonomy (native closed-trade inspection — `strategy.closedtrades.exit_comment()` on the exit bar/+1):
-  | Label | Trigger | Visual | Trade-list trace |
-  |---|---|---|---|
-  | STRONG EXIT | `isStrongExit` (bear 2/3 + fish>1.30, or overbought + SellVol%>60%) | dark red triangle, large | `comment="Strong Exit"` |
-  | EXIT — TARGET | `exit_comment` contains "Exit Target" | teal diamond | `comment_profit="Exit Target"` |
-  | EXIT — STOP | `exit_comment` contains "Exit Stop" | orange square | `comment_loss="Exit Stop"` |
-  | EXIT — REVERSAL | `isReversalExit` (fresh bear confluence / Fisher hook) | muted-red triangle | `comment="Exit Reversal"` |
-  | WINDOW END | date-filter forced close | gray circle, **suppressed unless filter on** | `comment="Window End"` (artifact, not edge) |
-- Verified end-to-end (SPY 1D Full, chart-model shape counts vs CSV reasons): STRONG 97=97, REVERSAL 62=62, STOP shape 102=51×2 bars (documented 2-bar emission), TARGET 0, WINDOW 0.
-- HUD STATUS latches the exact reason (`TARGET HIT` / `STOPPED OUT` / `STRONG EXIT` / `REVERSAL` / `LAST EXIT: …`).
-- Scoping (honest framing): SPY no breakout; `qqqBreakout` only QQQ+trend; BTC absorption. Per-ticker branches (`isSPY/isQQQ/isCrypto`, master L61–70, L229–251) = three asset-specific sub-strategies sharing one risk engine until a 10+ untuned-ticker run proves otherwise.
-- No-repaint: `calc_on_every_tick=false`, `process_orders_on_close=true`, 4/4 `request.security()` with `lookahead_off` — enforced by `scripts/check_no_repaint.py` + pre-commit hook (PASS 4→4 this session).
+- Regime: price-action-only macroGate (W200/M21/M12; PERMIT excised) + **Weekly expansion gate**: daily entries require Weekly %R-slow > −65 with price above the *rising* Weekly 21 EMA (`weeklyTrendAligned`, bypassed on weekly+ TFs).
+- Harvest engine: 2.6R stop / **1.85R target** (equities), 3.5R / **2.40R** (crypto); ratchet +0.75R→+0.05 / +1.35R→+0.70; 2-bar-low trail from +1.2R. Measured reality (SPY Full N=83): TARGET fills 1/83 — harvesting runs through ratchet-protected signal exits (STRONG +0.66R, REVERSAL +0.37R), stops realized ≈−1.06R. Skew repaired vs −2.8R risk, limit is a backstop — stated, not oversold.
+- Exits: native `exit_comment` inspection → STRONG (dark-red triangle) / TARGET (teal diamond) / STOP (orange square) / REVERSAL (muted-red triangle) / WINDOW (gray circle, suppressed unfiltered); TARGET/STOP latched to the single exit bar; entries gated to flat + cooldown-passed + confirmed (kills H9 phantom arrows).
+- Excised: CMF-20 (ablation sens ~0), FRED:PERMIT (0.0 crypto / weak equities). Retained deliberately: scoped Donchian `qqqBreakout` (never ablated — removal would be unevidenced), Fisher/RSI/VolPct/MACD (conflated transforms need split ablation).
+- No-repaint: `calc_on_every_tick=false`, `process_orders_on_close=true`, 5/5 `request.security()` with `lookahead_off` — guard PASS 4→5.
+- Basket-specific by evidence: out-of-basket 1D Full PF — DIA 0.775/80, IWM 0.663/86, AAPL 0.611/88, MSFT **1.531**/101, ETH 0.787/12·low-N. Generalization FAILS 3/5 powered, MSFT sole pass. No generality claimed.
 
-## 2. Results (traced; OOS + all walk-forward tests low-N, indicative only)
+## 2. Results (fresh 24-phase sweep; OOS all low-N)
 
-Full: SPY PF 1.018/N 213/DD 20.66% · QQQ 1.017/241/15.49% · BTC 0.936/91/14.83% · SPY W 1.791/39 · QQQ 1.599/55 · BTC W 6.915/17.
-IS→OOS degradation: SPY −268.73% · QQQ −54.13% · BTC **+47.67% (FAIL)** (OOS N=13/18/9).
-Statistics: daily PF 90% CIs all include 1.0 (perm p 0.24–0.47, noise-consistent); weekly marginal (SPY W p=0.082, QQQ W p=0.092). Walk-forward: 30/30 test cells low-N — annual windows cannot power this frequency.
-Ablation (exploratory): REMOVE CMF-20 (sens ~0) and PERMIT (0.0 crypto / weak equities); KEEP Dual-%R; W200 structural; Fisher/RSI/VolPct/MACD need split-ablation follow-ups (transforms conflated).
-Full tables + verbatim excerpts: [`PERFORMANCE_AUDIT.md`](PERFORMANCE_AUDIT.md). Recon: [`REPORTS/phase0_state_of_the_world.md`](REPORTS/phase0_state_of_the_world.md). Data: `metrics/trade_log_*.csv` (18), `metrics/walkforward_windows.csv` (30), `metrics/indicator_ablation_results.csv` (120), `metrics/phase3_sweep.json`.
+Full: SPY 1.293/84/65.48%/8.40% · QQQ 1.317/146/56.16%/6.11% · BTC 1.112/29/5.40% · SPY W 1.439/52 · QQQ W 1.562/95 · BTC W 5.532/17.
+IS→OOS degr: SPY −144.1% (0.8→1.953, N 18/8) · QQQ −2.0% (1.448→1.477, N 47/16) · BTC +100% **FAIL** (OOS N=1).
+Stats: SPY p=0.1139 (was 0.3313 — better, threshold missed), QQQ p=0.1029 (was 0.3533 — missed by 0.003, reported as miss); CIs SPY (0.959,1.823), QQQ (1.104,1.946). Noise-consistent at α=0.10; weekly marginal.
+Data: 18 fresh `metrics/trade_log_*.csv` (15/18 exact JSON match; SPY Full 83/84, IS 17/18 — H8), `metrics/generalization.json`. Prior `phase3_sweep.json` / `walkforward_windows.csv` / `indicator_ablation_results.csv` are STALE (previous architecture) — not cited as current evidence.
 
-## 3. What changed and why (this session vs 5b1339e)
+## 3. What changed and why (this session vs 6855498)
 
 | Change | Numbers effect | Why |
 |---|---|---|
-| Closed-trade exit taxonomy (`exit_comment` inspection, 5 shapes, HUD latch) | **None** — cd=3 reproduces all 6 Full cells exactly | Bracket STOP vs TARGET were indistinguishable; generic triangles |
-| `minCooldownBars` input (default 3) | None at default | Enables evidence-based cooldown choice (§3 result: asset-specific, keep 3) |
-| Trade-log exporter (Pine emitter + chart-model read) | New data: 18 CSVs, 97–99% capture (H8 bounds the gap) | Unblocks all statistics; native export paywalled (TOOLING.md) |
-| Walk-forward / bootstrap / ablation suites | New data: 30 + 96 + stats rows | Mandated protocol; results mostly negative — reported as such |
-| Withdrew nothing further; prior pooled PASS stays withdrawn | Headlines unchanged (honest FAILs) | No new passing claim exists to make |
+| Purge CMF-20 + PERMIT | −1/+0 security calls; removal trades added back (PERMIT blocked SPY 213→252-style) | Ablation zeros with numbers |
+| Weekly gate into `longSetup` | N↓↓ (213→84 SPY), DD 20.66→8.40, WR 60.09→65.48, PF 1.018→1.293 | Daily traded dead weekly tides (p=0.33) |
+| 1.85R/2.40R + 2-stage ratchet + bar trail | stops −2.8R risk → −1.06R realized; TARGET 1/83 | +3R filled 0/210 — decorative |
+| Plot gating + single-bar latch | visuals authoritative (re-verify counts next session) | H9 phantom/double arrows |
+| `ta.lowest` compile fix | COMPILE_OK | v5 has no bare `lowest` |
 
-## 4. Variant table (diff-verified 2026-09-09 evening)
+## 4. Variant table (diff-verified post-edit)
 
 | File | `useDateFilter` / `dateMode` | `inTradeWindow` | Diverges from master? |
 |---|---|---|---|
@@ -49,20 +40,21 @@ Full tables + verbatim excerpts: [`PERFORMANCE_AUDIT.md`](PERFORMANCE_AUDIT.md).
 | `strategy_is.pine` | `true` / `"In-Sample (2018-2024)"` | `time ∈ [2018-01-01, 2024-12-31]` | date block only |
 | `strategy_oos.pine` | `true` / `"Out-of-Sample (2025-2026)"` | `time ∈ [2025-01-01, 2026-12-31]` | date block only |
 
-Note: JSON "Full" cells (`SPY_1D_Full` etc.) were swept with the MASTER (unconstrained full history, incl. pre-2018); `strategy_full.pine` is the windowed 2018–2026 variant (`SPY_1D_Full_2018_2026` cells). Regenerate: `python scripts\make_variants.py` (also auto-run at each `evaluate_all_assets.py` sweep start).
+Note: JSON "Full" cells use the MASTER (unconstrained, incl. pre-2018); `strategy_full.pine` = windowed 2018–2026 (`*_Full_2018_2026` cells).
 
 ## 5. Operations
 
 ```powershell
 .\scripts\launch_chrome_with_debugging.ps1 -Port 9222
 python scripts\make_variants.py
-python scripts\evaluate_all_assets.py     # full 24-cell sweep (~6 min, single WS)
-python scripts\compile_check.py           # fast compile+metrics check of the master
-python scripts\check_no_repaint.py        # repaint guard (also pre-commit)
-python scripts\export_trade_logs.py [--only TAG_Full]  # 18 trade-log CSVs (~30 min)
-python scripts\run_phase3.py --suite cooldown|sizing|walkfwd
-python scripts\run_ablation.py
+python scripts\evaluate_all_assets.py     # 24-cell sweep (single WS)
+python scripts\compile_check.py
+python scripts\check_no_repaint.py
+python scripts\export_trade_logs.py [--only TAG_Full]
+python scripts\run_phase3.py --suite cooldown|sizing|walkfwd   # STALE-arch artifacts; re-run to refresh
+python scripts\run_ablation.py                             # STALE-arch; transforms reference excised code — update before reuse
 python scripts\stats_validation.py metrics\trade_log_*.csv
+python scripts\run_generalization.py                       # DIA/IWM/AAPL/MSFT/ETHUSD Full/IS/OOS 1D
 ```
 
-Tooling inventory (incl. paywall findings + retired probes): [`TOOLING.md`](TOOLING.md).
+Tooling (retirements: CMF-20, PERMIT): [`TOOLING.md`](TOOLING.md). Recon: [`REPORTS/phase0_state_of_the_world.md`](REPORTS/phase0_state_of_the_world.md).
