@@ -58,3 +58,45 @@ python scripts\run_generalization.py                       # DIA/IWM/AAPL/MSFT/E
 ```
 
 Tooling (retirements: CMF-20, PERMIT): [`TOOLING.md`](TOOLING.md). Recon: [`REPORTS/phase0_state_of_the_world.md`](REPORTS/phase0_state_of_the_world.md).
+
+## 6. Production Operating Envelope (v1.0.0 — descriptive, not a mandate rewrite)
+
+The original mandate (audit §1) stands with its FAILs. The envelope below describes achieved behavior for operations — including its own misses:
+
+| Floor | SPY | QQQ | Verdict |
+|---|---|---|---|
+| Daily DD ≤ 8.5% | 8.40% | 6.11% | PASS / PASS |
+| Daily WR ≥ 60% | 65.48% | 56.16% | PASS / **FAIL** |
+| Daily PF ≥ 1.30 | 1.293 | 1.317 | **FAIL** (by 0.007) / PASS |
+| Weekly PF ≥ 1.40 | 1.439 (W) | 1.562 (W) | PASS (BTC W 5.532, N=17 low-N) |
+| Weekly WR ≥ 59% / DD ≤ 5% | 59.62% / 4.37% | 56.84% / 4.84% | WR: PASS/**FAIL**; DD: PASS/PASS |
+| Realized loss skew ≈ −1.0R | STOP mean −1.059 (N=83 log) | — | PASS (vs −2.8R risked) |
+
+Full floor-by-floor verdicts with source keys: PERFORMANCE_AUDIT.md §8.
+
+## 7. Indicator Synthesis Matrix (code truth — pivots 5-bar SPY / 3-bar QQQ-BTC / 2-bar weekly)
+
+| Indicator | Role | Status | Evidence |
+|---|---|---|---|
+| Dual %R (21/112) | Exhaustion + breakout confirmation; weekly slow leg gates daily entries (>−65) | KEEP | Ablation +3.3 Full / +25.2 W5; QQQ 1D +14.65 |
+| Fisher Transform (9) | Zero-lag hooks; fish>1.30 Strong-exit leg; Peak exits | KEEP (split ablation open) | Removal conflates entries+exits; no action without split test |
+| RSI-14 | Divergence triad votes; 42–60 continuation zone | KEEP (split ablation open) | Mixed by asset; transform conflated |
+| MACD histogram (12,26,9) | Divergence triad votes | KEEP (weak) | Sens −9…+7, inconclusive |
+| Buy/Sell Vol% + OBV/EMA-20 + MFI-14 | Absorption / volume confirmation | KEEP | Regime-dependent; OOS-contributory |
+| EMA trend stack (20/50 daily; 10/21 weekly; W200/M21/M12 regime; rising W21 gate) | Trend + regime alignment | KEEP (structural) | DD gates PASS on its watch |
+| Donchian-20 breakout (QQQ-only, trend-aligned) | Scoped momentum catch-all | RETAINED (never ablated) | Removal unevidenced — kept deliberately |
+| CMF-20 | Absorption leg | **EXCISED** | Sens ~0 (five exact 0.0) — never bound |
+| FRED:PERMIT housing | Macro lead filter | **EXCISED** | 0.0 crypto / weak-inconsistent equities + publication lag |
+| WaveTrend Godmode | — (never in master) | ABSENT | Do not add unvalidated indicators |
+
+## 8. Out-of-Basket Generalization Record (untuned 1D Full, `metrics/generalization.json`)
+
+| Ticker | PF | N | WR% | DD% | Net% | Verdict |
+|---|---|---|---|---|---|---|
+| BATS:DIA | 0.775 | 80 | 52.50 | 13.66 | −9.34 | Negative expectancy — FAIL |
+| BATS:IWM | 0.663 | 86 | 45.35 | 18.66 | −16.68 | Negative expectancy — FAIL |
+| NASDAQ:AAPL | 0.611 | 88 | 47.73 | 28.65 | −22.10 | Negative expectancy — FAIL |
+| NASDAQ:MSFT | 1.531 | 101 | 65.35 | 13.91 | +22.92 | Positive expectancy — sole pass |
+| BITSTAMP:ETHUSD | 0.787 | 12 | 50.00 | 5.73 | −1.35 | low-N, indicative only |
+
+System is a basket-specific ensemble (SPY/QQQ/BTC); the fallback path is ticker-luck, not edge. No generality claimed (H5 resolved by evidence).

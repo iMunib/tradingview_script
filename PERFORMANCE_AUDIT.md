@@ -82,5 +82,20 @@ Deviations from directive, disclosed: (a) prose said W%R>−50, code block said 
 - **H8: chart-vs-Deep-Backtest capture gap** — persists in fresh export (SPY Full 83/84, IS 17/18); bounded, gate-neutral.
 - **H9: visual doubles** — entry gating + single-bar TARGET/STOP latch implemented this session; STOP×2/HUD-latch behavior superseded (re-verify counts next session).
 - **H10 (new): production-refactor accounting.** CMF-20 + PERMIT excised (files/lines §6); +3R→1.85R recalibration does NOT produce limit harvesting (1/83 fills — §3 states the real mechanism); p-value prediction missed (0.1139/0.1029 vs <0.10 — §4); N-for-quality trade collapsed SPY N below mandate (84<160 — §1 reports the regression, no rescue tuning attempted); prior-session phase3/walkforward/ablation artifacts are STALE (old architecture) and cited nowhere as current evidence.
+- **H11 (closure v1.0.0): baseline ratification mechanics.** The §8 envelope is DESCRIPTIVE of achieved behavior, not a rewrite of the mandate — §1 FAILs stand permanently. Envelope floors themselves show misses (SPY PF 1.293 vs 1.30 floor; QQQ WR 56.16% vs 60% floor; QQQ W WR 56.84% vs 59% floor), reported in §8, not rounded away. Corrected second-hand claims: baseline SPY WR was 60.09 (traced JSON), not 52.2% (untraced — not used); BTC W Full was N=17 (not 9); pivots are 5-bar SPY / 3-bar QQQ-BTC / 2-bar weekly (code truth, not "4-bar"/"AMTE" — no such identifier exists in master); BTC W Full N=17 is low-N (flagged, not gated).
 
 *Generated 2026-09-09 night session — FAILs reported as FAILs with raw excerpts; negative results (generalization 1/5, p-misses, TARGET 1.2%) reported, not buried.*
+
+## 8. Production Operating Envelope — floor verdicts (v1.0.0, descriptive)
+
+The original mandate (§1) is unchanged and its FAILs stand. The envelope below ratifies achieved operating behavior for deployment decisions. Every floor cites its source key; misses are verdicts, not footnotes.
+
+| Envelope floor | Achieved (source key) | Verdict |
+|---|---|---|
+| Daily DD ≤ 8.5% | SPY 8.40% (`SPY_1D_Full.max_drawdown_pct`), QQQ 6.11% (`QQQ_1D_Full.max_drawdown_pct`) | PASS / PASS |
+| Daily WR ≥ 60% | SPY 65.48% (`SPY_1D_Full.win_rate_pct`), QQQ 56.16% (`QQQ_1D_Full.win_rate_pct`) | PASS / **FAIL** |
+| Daily PF ≥ 1.30 | SPY 1.293 (`SPY_1D_Full.profit_factor`), QQQ 1.317 (`QQQ_1D_Full.profit_factor`) | **FAIL** (by 0.007) / PASS |
+| Weekly PF ≥ 1.40 | SPY W 1.439, QQQ W 1.562, BTC W 5.532 (`*_Full.profit_factor`) | PASS ×3 (BTC W N=17 low-N, indicative) |
+| Weekly WR ≥ 59% | SPY W 59.62, QQQ W 56.84, BTC W 64.71 (`*_Full.win_rate_pct`) | PASS / **FAIL** / PASS (low-N) |
+| Weekly DD ≤ 5.0% | SPY W 4.37, QQQ W 4.84, BTC W 1.85 (`*_Full.max_drawdown_pct`) | PASS ×3 |
+| Realized loss skew ≈ −1.0R | SPY STOP mean −1.059 (`trade_log_SPY_1D_Full.csv` exit_reason=STOP) | PASS (vs −2.8R risked) |

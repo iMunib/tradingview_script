@@ -1,0 +1,13 @@
+# Scratch / generated / local-only — never committed (release hygiene v1.0.0)
+.emit_tmp/
+.phase3_tmp/
+.abl_tmp/
+.diag_tmp/
+.openclaw/
+__pycache__/
+*.pyc
+logs/
+venv/
+# Loose local backups (user files, kept on disk, out of version control)
+FINAL_OPTIMIZED_STRATEGY - txt version.txt
+*.bak
